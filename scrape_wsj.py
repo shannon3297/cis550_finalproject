@@ -36,8 +36,22 @@ except:
 # sign into WSJ
 username = 'shannon3297@gmail.com'
 pwd = 'cis550'
+# # automated approach doesn't work because of inputting password for some reason, rip bc now it means I can't go headless
+# signin_button = driver.find_element_by_xpath('//*[@id="root"]/div/div/div/div[1]/header/div[1]/div/div[2]/div/a[2]')
+# signin_button.click()
+# time.sleep(1)
+# username_button = driver.find_element_by_xpath('//*[@id="username"]')
+# username_button.send_keys(username)
+# continue_with_pwd = driver.find_element_by_xpath('//*[@id="basic-login"]/div[1]/form/div[2]/div[6]/div[1]/button[2]/span')
+# continue_with_pwd.click()
+# time.sleep(1)
+# pwd_button = driver.find_element_by_xpath('//*[@id="password"]')
+# pwd_button.send_keys(pwd)
+# signin_button = driver.find_element_by_xpath('//*[@id="password-login"]/div/form/div/div[5]/div[1]/button')
+# signin_button.click()
+# time.sleep(1)
+# print("Successfully logged in")
 signed_in = input("Now sign into WSJ using username/password in script and return to https://www.wsj.com/news/archive/years, hit enter when done")
-# print("path", chromedriver_path.split('chromedriver')[0] +'wsj_articles.csv')
 
 # set up csv to export data
 with open(chromedriver_path.split('chromedriver')[0] +'wsj_articles.csv', 'w', encoding='utf-8-sig') as f:
@@ -48,7 +62,7 @@ with open(chromedriver_path.split('chromedriver')[0] +'wsj_articles.csv', 'w', e
     # added dummy so indices match up to months, ex 2 = February 
     months = ['dummy', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
     num_days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] # number of days to scrape per month
-    initial = 3
+    initial = 6
     # month
     for i in range(initial,initial+num_months): 
         try:
@@ -61,9 +75,9 @@ with open(chromedriver_path.split('chromedriver')[0] +'wsj_articles.csv', 'w', e
             continue
         try:
             # day
-            for j in range(1, num_days[i-1] + 1):
-            # for j in range(1, 20):
-            # for j in range(11, 21):
+            for j in range(15, num_days[i-1] + 1):
+            # for j in range(4, 8):
+            # for j in range(31, 32):
                 # day = driver.find_element_by_xpath('//*[@id="root"]/div/div/div/div[2]/div/ul/li[' + str(j) + ']/a')
                 # day.click()
                 driver.get('https://www.wsj.com/news/archive/2021/' + str(i).zfill(2) + '/' + str(j).zfill(2))
@@ -77,7 +91,6 @@ with open(chromedriver_path.split('chromedriver')[0] +'wsj_articles.csv', 'w', e
                     category = driver.find_element_by_xpath('//*[@id="main"]/div[1]/div/ol/article[' + str(article_idx) + ']/div[2]/div/span')
                     # skip crossword articles lol
                     if category.text.lower() == 'crossword':
-                        driver.back()
                         continue
                     try:
                         article_title = driver.find_element_by_xpath('//*[@id="main"]/div[1]/div/ol/article[' + str(article_idx) + ']/div[3]/div/h2/a/span')
@@ -110,10 +123,17 @@ with open(chromedriver_path.split('chromedriver')[0] +'wsj_articles.csv', 'w', e
                                 try:
                                     title = driver.find_element_by_xpath('//*[@id="bigTopBox"]/div/div[2]/h1').text
                                 except:
-                                    title = ""
+                                    try:
+                                        title = driver.find_element_by_xpath('//*[@id="bigTopBox"]/div/div[4]/h1').text
+                                    except:
+                                        try:
+                                            title = driver.find_element_by_xpath('//*[@id="REUNIONS-header-8ce32697-66cb-4b2e-a597-1648fc458811-container"]/div[2]/div[1]/div/h3').text
+                                        except:
+                                            title = ""
                     # ignore these types of articles
                     if title == 'Pepper...and Salt':
                         driver.back()
+                        time.sleep(1)
                         continue
                     # print("title", title)
                     # get subtitle
@@ -129,7 +149,13 @@ with open(chromedriver_path.split('chromedriver')[0] +'wsj_articles.csv', 'w', e
                                 try:
                                     subtitle = driver.find_element_by_xpath('//*[@id="bigTopBox"]/div/div[2]/h2').text
                                 except:
-                                    subtitle = ""
+                                    try:
+                                        subtitle = driver.find_element_by_xpath('//*[@id="bigTopBox"]/div/div[4]/h2').text
+                                    except:
+                                        try:
+                                            subtitle = driver.find_element_by_xpath('//*[@id="REUNIONS-header-8ce32697-66cb-4b2e-a597-1648fc458811-container"]/div[2]/div[1]/div/h2').text
+                                        except:
+                                            subtitle = ""
                     # print("subtitle", subtitle)
                     # get content
                     content = ""
@@ -170,5 +196,5 @@ with open(chromedriver_path.split('chromedriver')[0] +'wsj_articles.csv', 'w', e
                     time.sleep(1)      
         except:
             print("Couldn't click into some element for month", str(i), "day", str(j))
-            continue
+            driver.close()
 
