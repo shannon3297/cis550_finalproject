@@ -7,3 +7,7 @@ scrape_wsj.py scrapes articles from Wall Street Journal archive: https://www.wsj
 combine_csv.ipynb combines scraped articles within a month into a singular month csv.
 
 clean_wsj_articles.ipynb cleans data and performs entity resolution as needed.
+
+chromedriver is a webdriver used to scrape
+
+seeking_alpha.py is an attempt to scrape from Seeking Alpha but the website blocks automated scraping.
