@@ -57,30 +57,30 @@ signed_in = input("Now sign into WSJ using username/password in script and retur
 with open(chromedriver_path.split('chromedriver')[0] +'wsj_articles.csv', 'w', encoding='utf-8-sig') as f:
     wr = csv.writer(f)
     wr.writerow(['Article URL', 'Date', 'Title', 'Subtitle', 'Content'])
-    # 2021 articles
     num_months = 1 # change to 12 to scrape entire year
     # added dummy so indices match up to months, ex 2 = February 
     months = ['dummy', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
     num_days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] # number of days to scrape per month
-    initial = 6
+    initial = 10
+    year = 20
     # month
     for i in range(initial,initial+num_months): 
         try:
             # month = driver.find_element_by_xpath('//*[@id="root"]/div/div/div/div[2]/div[1]/ul/li[' + str(i) + ']/a')
             # month.click()
-            driver.get('https://www.wsj.com/news/archive/2021/' + months[i])
+            driver.get('https://www.wsj.com/news/archive/20' + str(year) + '/' + months[i])
             time.sleep(1)
         except:
             print("Couldn't click into month", str(i))
             continue
         try:
             # day
-            for j in range(15, num_days[i-1] + 1):
-            # for j in range(4, 8):
+            for j in range(23, num_days[i-1] + 1):
+            # for j in range(11, 12):
             # for j in range(31, 32):
                 # day = driver.find_element_by_xpath('//*[@id="root"]/div/div/div/div[2]/div/ul/li[' + str(j) + ']/a')
                 # day.click()
-                driver.get('https://www.wsj.com/news/archive/2021/' + str(i).zfill(2) + '/' + str(j).zfill(2))
+                driver.get('https://www.wsj.com/news/archive/20' + str(year) + '/' + str(i).zfill(2) + '/' + str(j).zfill(2))
                 time.sleep(1)
                 article_titles = driver.find_elements_by_xpath('//*[@id="main"]/div[1]/div/ol/article')
                 time.sleep(1)
@@ -106,7 +106,7 @@ with open(chromedriver_path.split('chromedriver')[0] +'wsj_articles.csv', 'w', e
                     # print("url", url)
                     # get date
                     try:
-                        currDate = str(i) + "/" + str(j) + "/21"
+                        currDate = str(i) + "/" + str(j) + "/" + str(year)
                     except:
                         currDate = ""
                     # print("currDate", currDate)
