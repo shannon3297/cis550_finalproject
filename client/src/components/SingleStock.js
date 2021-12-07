@@ -6,6 +6,8 @@ import AdapterDateFns from "@mui/lab/AdapterDateFns"
 import LocalizationProvider from "@mui/lab/LocalizationProvider"
 import DesktopDatePicker from "@mui/lab/DesktopDatePicker"
 
+const colors = ["red", "yellow", "green", "black", "white"]
+
 let SERVER_URL = "http://localhost:8080"
 
 class SingleStock extends React.Component {
@@ -16,6 +18,7 @@ class SingleStock extends React.Component {
             activeTicker: "",
             searchMatches: [],
             stockPriceData: [],
+            articles: [],
         }
         this.inputRef = React.createRef()
     }
@@ -39,24 +42,20 @@ class SingleStock extends React.Component {
         //let ticker = e.target.value
         this.inputRef.current.value = ticker
 
-        fetch(SERVER_URL + "/stockData?ticker=" + ticker)
-            .then((res) => res.json())
-            .then((result) => {
-                console.log(
-                    "formatted",
-                    result.results.map((item) => ({ ...item, date: Date.parse(item.date) }))
-                )
-                this.setState({
-                    stockPriceData: result.results.map((item) => ({ ...item, date: Date.parse(item.date) })),
-                })
+        Promise.all([
+            fetch(SERVER_URL + "/stockData?ticker=" + ticker).then((res) => res.json()),
+            fetch(SERVER_URL + "/articlesBeforeBigMoves?ticker=" + ticker).then((res) => res.json()),
+        ]).then((result) => {
+            this.setState({
+                stockPriceData: result[0].results.map((item) => ({
+                    ...item,
+                    date: new Date(item.date),
+                    numericalDate: Date.parse(item.date),
+                    stringDate: item.date.substring(0, 10),
+                })),
+                articles: result[1].results,
+                searchActive: false,
             })
-
-        fetch(SERVER_URL + "/articlesBeforeBigMoves?ticker=" + ticker)
-            .then((res) => res.json())
-            .then((result) => console.log(result))
-
-        this.setState({
-            searchActive: false,
         })
     }
 
@@ -86,6 +85,7 @@ class SingleStock extends React.Component {
                                 className=""
                                 onChange={this.updateAutofill}
                                 onFocus={() => this.setState({ searchActive: true })}
+                                onBlur={() => window.setTimeout(() => this.setState({ searchActive: false }), 100)}
                                 placeholder="Enter stock here..."
                                 className="input"
                                 ref={this.inputRef}
@@ -108,7 +108,24 @@ class SingleStock extends React.Component {
                         </div>
 
                         <div className="p-4">
-                            <GraphWidget timeseries={this.state.stockPriceData} />
+                            <GraphWidget
+                                timeseries={this.state.stockPriceData}
+                                articleDates={this.state.articles.map((item) => item.dateOfPriceMove)}
+                            />
+                            <div class="flex flex-row flex-wrap">
+                                {this.state.articles.map((article, i) => (
+                                    <div class="bg-white rounded-md w-48 h-48 m-4">
+                                        <div class="flex flex-row items-center">
+                                            <div className="w-16 h-16">
+                                                <svg height="16" width="10">
+                                                    <circle cx="8" cy="8" r="8" fill={colors[i]} />
+                                                </svg>
+                                            </div>
+                                            <div>{article.url}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>

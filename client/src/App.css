@@ -52,9 +52,18 @@
     justify-content: center;
     align-items: center;
 }
+
 .input {
     border: 1px solid gray;
     border-radius: 2px;
     padding: 1em;
     transition-duration: 0.1s;
+}
+
+.dot {
+    height: 25px;
+    width: 25px;
+    background-color: #bbb;
+    border-radius: 50%;
+    display: inline-block;
 }
