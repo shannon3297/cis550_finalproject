@@ -11,3 +11,5 @@ clean_wsj_articles.ipynb cleans data and performs entity resolution as needed.
 chromedriver is a webdriver used to scrape
 
 seeking_alpha.py is an attempt to scrape from Seeking Alpha but the website blocks automated scraping.
+
+clean_company_data.ipynb cleans data to ingest into our Company table
