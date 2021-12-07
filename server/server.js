@@ -13,12 +13,20 @@ app.use(
 )
 
 // Route 1 - register as GET
-app.get("/allStocks", routes.allStocks)
+app.get("/stockStats", routes.stockStats)
+app.get("/recentArticles", routes.recentArticles)
+app.get("/articlesBeforeBigMoves", routes.articlesBeforeBigMoves)
+app.get("/stocksBiggestVolatility", routes.stocksBiggestVolatility)
+app.get("/consistentMovers", routes.consistentMovers)
+app.get("/companiesWithMostPress", routes.companiesWithMostPress)
+app.get("/industriesMostVolatility", routes.industriesMostVolatility)
+app.get("/industriesMostPress", routes.industriesMostPress)
+app.get("/industriesToMoveSoon", routes.industriesToMoveSoon)
+app.get("/industriesPerformance", routes.industriesPerformance)
 
-app.get("/stockData", routes.getStockData)
 
 app.listen(config.server_port, () => {
-    console.log(`Server running at http://${config.server_host}:${config.server_port}/`)
+    console.log(`Server running at http://127.0.0.1:8080/`)
 })
 
 module.exports = app

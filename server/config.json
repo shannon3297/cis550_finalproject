@@ -1,9 +1,8 @@
 {
-    "rds_host": "database-1.cj91skg3snos.us-east-1.rds.amazonaws.com",
+    "rds_host": "cis-550-finalproj.cp2p8jp2jafr.us-east-2.rds.amazonaws.com",
     "rds_port": "3306",
-    "rds_user": "admin",
-    "rds_password" : "weakpassword",
-    "rds_db": "FIFA",
-    "server_host": "127.0.0.1",
-    "server_port":"8080"
+    "rds_user": "cis550",
+    "rds_password" : "finalprojectgroup22",
+    "rds_db": "finalproject",
+    "server_port": 8080
 }
