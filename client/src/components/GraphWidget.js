@@ -1,6 +1,6 @@
 import React from "react"
-import { Chart } from "react-charts"
-
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
+import moment from "moment"
 function GraphWidget({ timeseries }) {
     const data = React.useMemo(
         () => [
@@ -29,7 +29,19 @@ function GraphWidget({ timeseries }) {
                 height: "300px",
             }}
         >
-            <Chart data={data} axes={axes} />
+            <ResponsiveContainer width="100%" height="100%">
+                <LineChart width={500} height={300} data={timeseries}>
+                    <XAxis
+                        dataKey="date"
+                        domain={["auto", "auto"]}
+                        name="date"
+                        tickFormatter={(unixTime) => moment(unixTime).format("DD-MM-YY")}
+                        type="number"
+                    ></XAxis>
+                    <YAxis />
+                    <Line type="monotone" dataKey="close" stroke="#8884d8" />
+                </LineChart>
+            </ResponsiveContainer>
         </div>
     )
 }
