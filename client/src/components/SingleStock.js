@@ -1,9 +1,12 @@
 import React from "react"
+import moment from "moment"
 import GraphWidget from "./GraphWidget"
 import TextField from "@mui/material/TextField"
 import AdapterDateFns from "@mui/lab/AdapterDateFns"
 import LocalizationProvider from "@mui/lab/LocalizationProvider"
 import DesktopDatePicker from "@mui/lab/DesktopDatePicker"
+
+const colors = ["red", "yellow", "green", "black", "white"]
 
 let SERVER_URL = "http://localhost:8080"
 
@@ -15,15 +18,22 @@ class SingleStock extends React.Component {
             activeTicker: "",
             searchMatches: [],
             stockPriceData: [],
+            articles: [],
         }
         this.inputRef = React.createRef()
+    }
+
+    dateToUnix = (dateString) => {
+        const toDate = moment(dateString, "DD-MM-YY").toDate()
+        const toUnix = toDate.getTime()
+        return toUnix
     }
 
     componentDidMount() {
         fetch(SERVER_URL + "/allStocks")
             .then((res) => res.json())
             .then((result) => {
-                this.setState({ allTickers: result, searchMatches: result })
+                this.setState({ allTickers: result.results, searchMatches: result.results })
             })
     }
 
@@ -32,26 +42,31 @@ class SingleStock extends React.Component {
         //let ticker = e.target.value
         this.inputRef.current.value = ticker
 
-        fetch(SERVER_URL + "/stockData")
-            .then((res) => res.json())
-            .then((result) => {
-                console.log("result is", result)
-                this.setState({ stockPriceData: result })
+        Promise.all([
+            fetch(SERVER_URL + "/stockData?ticker=" + ticker).then((res) => res.json()),
+            fetch(SERVER_URL + "/articlesBeforeBigMoves?ticker=" + ticker).then((res) => res.json()),
+        ]).then((result) => {
+            this.setState({
+                stockPriceData: result[0].results.map((item) => ({
+                    ...item,
+                    date: new Date(item.date),
+                    numericalDate: Date.parse(item.date),
+                    stringDate: item.date.substring(0, 10),
+                })),
+                articles: result[1].results,
+                searchActive: false,
             })
-
-        this.setState({
-            searchActive: false,
         })
     }
 
     updateAutofill = (e) => {
         let search = e.currentTarget.value
+
         let matches = this.state.allTickers.filter(
             (item) =>
                 item.name.toLowerCase().includes(search.toLowerCase()) ||
-                item.value.toLowerCase().includes(search.toLowerCase())
+                item.ticker.toLowerCase().includes(search.toLowerCase())
         )
-        console.log("matches are", matches)
         this.setState({
             searchMatches: matches,
         })
@@ -70,6 +85,7 @@ class SingleStock extends React.Component {
                                 className=""
                                 onChange={this.updateAutofill}
                                 onFocus={() => this.setState({ searchActive: true })}
+                                onBlur={() => window.setTimeout(() => this.setState({ searchActive: false }), 100)}
                                 placeholder="Enter stock here..."
                                 className="input"
                                 ref={this.inputRef}
@@ -78,13 +94,13 @@ class SingleStock extends React.Component {
                                 <div class="absolute z-50 h-64 w-64 overflow-y-scroll bg-white shadow-md">
                                     {this.state.searchMatches.map((match) => (
                                         <div
-                                            key={match.value}
-                                            onClick={() => this.fetchStockData(match.value)}
-                                            value={match.value}
+                                            key={match.ticker}
+                                            onClick={() => this.fetchStockData(match.ticker)}
+                                            value={match.ticker}
                                             className="hover:bg-blue p-4"
                                         >
                                             <div>{match.name}</div>
-                                            <div class="text-sm text-gray">{match.value}</div>
+                                            <div class="text-sm text-gray">{match.ticker}</div>
                                         </div>
                                     ))}
                                 </div>
@@ -92,7 +108,24 @@ class SingleStock extends React.Component {
                         </div>
 
                         <div className="p-4">
-                            <GraphWidget timeseries={this.state.stockPriceData} />
+                            <GraphWidget
+                                timeseries={this.state.stockPriceData}
+                                articleDates={this.state.articles.map((item) => item.dateOfPriceMove)}
+                            />
+                            <div class="flex flex-row flex-wrap">
+                                {this.state.articles.map((article, i) => (
+                                    <div class="bg-white rounded-md w-48 h-48 m-4">
+                                        <div class="flex flex-row items-center">
+                                            <div className="w-16 h-16">
+                                                <svg height="16" width="10">
+                                                    <circle cx="8" cy="8" r="8" fill={colors[i]} />
+                                                </svg>
+                                            </div>
+                                            <div>{article.url}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
