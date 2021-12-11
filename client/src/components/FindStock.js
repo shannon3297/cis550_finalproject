@@ -10,7 +10,7 @@ const colors = ["red", "yellow", "green", "black", "white"]
 
 let SERVER_URL = "http://localhost:8080"
 
-class SingleStock extends React.Component {
+class FindStock extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
@@ -172,4 +172,4 @@ class SingleStock extends React.Component {
     }
 }
 
-export default SingleStock
+export default FindStock

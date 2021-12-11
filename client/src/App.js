@@ -1,10 +1,10 @@
 import logo from "./logo.svg"
 import "./App.css"
 import Nav from "./components/Nav"
-import Home from "./components/Home"
+import Overview from "./components/Overview"
 import Industries from "./components/Industries"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
-import SingleStock from "./components/SingleStock"
+import FindStock from "./components/FindStock"
 import AdapterDateFns from "@mui/lab/AdapterDateFns"
 import LocalizationProvider from "@mui/lab/LocalizationProvider"
 function App() {
@@ -14,8 +14,9 @@ function App() {
                 <div className="App">
                     <Nav></Nav>
                     <Routes>
-                        <Route path="/home" element={<Home></Home>} />
-                        <Route path="/stock" element={<SingleStock></SingleStock>} />
+                        <Route path="/overview" element={<Overview></Overview>} />
+                        <Route path="/findstock" element={<FindStock></FindStock>} />
+                        <Route path="/industries" element={<Industries></Industries>} />
                     </Routes>
                 </div>
             </BrowserRouter>
