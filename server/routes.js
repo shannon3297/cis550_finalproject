@@ -184,10 +184,51 @@ async function articlesBeforeBigMoves (req, res) {
 //         AGGREGATE STOCK ROUTES
 // ********************************************
 
+/**
+ * Returns the top 5 stocks with the highest daily moves on specified date. 
+ * 
+ * Query params
+ * date - date to conduct this query to. Make sure this is a valid historical trading day. 
+ *      (defaults to 2021-10-29)
+ * 
+ * Returns 5 x 3
+ * Column name: ticker, date, dailyMove 
+ * intradayMovement = stock's close price on date / close price on day before date 
+ * 
+ * Rows are sorted in descending order of dailyMove
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ */
+async function stocksBiggestMovers(req, res) {
+    const date = req.query.date ? req.query.date : "2021-10-29";
+
+    connection.query(`WITH LabeledTickerTable AS (
+        SELECT ticker, date, close, row_number() over (partition by ticker ORDER BY date desc) as row_num
+        FROM Stocks
+        WHERE date <= STR_TO_DATE('${date}','%Y-%m-%d')
+          AND date >= DATE_SUB("${date}", INTERVAL 3 DAY)
+        ORDER BY row_num asc
+      )
+      SELECT l2.ticker as ticker, l2.date as date, l2.close / l.close as dailyMove
+      FROM LabeledTickerTable l JOIN LabeledTickerTable l2 on l.ticker = l2.ticker and l.row_num = (l2.row_num + 1)
+      where l2.date = STR_TO_DATE('${date}','%Y-%m-%d')
+      order by dailyMove desc
+      limit 5
+    `, function (error, results, fields) {
+            if (error) {
+                console.log(error)
+                res.json({ error: error })
+            } else if (results) {
+                res.json({ results: results })
+            }
+        });
+
+}
+
 
 /**
  * Returns the top 5 stocks with the highest intraday price volatiltiy on a specific date. 
- * Default value of req.query.numdays is 1. 
  * Must make sure that the day that is req.query.numdays days before Oct 31 2021 is a valid 
  * trading day, otherwise result will be empty. 
  * 
@@ -571,6 +612,7 @@ module.exports = {
     stockStats,
     recentArticles,
     articlesBeforeBigMoves,
+    stocksBiggestMovers,
     stocksBiggestVolatility,
     consistentMovers,
     companiesWithMostPress,
