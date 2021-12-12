@@ -384,7 +384,7 @@ async function consistentMovers(req, res) {
 }
 
 /**
- * Checks which of the 100 most valuable companies have been receiving the most WSJ press
+ * Checks which companies have been receiving the most WSJ press
  * over the date range [startday, endday]. Weights title mentions in WSJ articles more
  * heavily than content mentions.
  *
@@ -405,43 +405,40 @@ async function companiesWithMostPress(req, res) {
     const endday = req.query.endday ? req.query.endday : "2021-11-01"
 
     connection.query(
-        `WITH MostValuableCompanies AS (
-        SELECT * FROM Company
-        ORDER BY market_cap desc
-        LIMIT 100
-      ),
-      TitleMentions AS (
-        SELECT s.ticker, article_id
-        FROM WSJArticles w,
-             MostValuableCompanies s
-        WHERE w.date >= STR_TO_DATE('${startday}','%Y-%m-%d')
-            AND w.date <= STR_TO_DATE('${endday}','%Y-%m-%d')
-            AND (w.title LIKE CONCAT('%', s.ticker, '%')
-                    OR w.title LIKE CONCAT('%', s.company_name, '%')
-                )
-      ), ContentMentions AS (
-        SELECT s.ticker, article_id
-        FROM WSJArticles w,
-             MostValuableCompanies s
-        WHERE w.date >= STR_TO_DATE('${startday}','%Y-%m-%d')
-            AND w.date <= STR_TO_DATE('${endday}','%Y-%m-%d')
-            AND ( w.content LIKE CONCAT('%', s.ticker, '%')
-                    OR w.content LIKE CONCAT('%', s.company_name, '%')
-                )
-      )
-      
-      SELECT temp1.ticker
-      FROM
-      (SELECT t.ticker, COUNT(*) as numBigMentions
-      FROM TitleMentions t JOIN ContentMentions c ON t.ticker = c.ticker AND t.article_id = c.article_id
-      GROUP BY ticker) AS temp1
-      NATURAL JOIN
-      (SELECT ticker, COUNT(*) as numSmallMentions
-      FROM ContentMentions
-      GROUP BY ticker) AS temp2
-      ORDER BY (2 * numBigMentions + 1 * numSmallMentions) desc
-      LIMIT 10
-      
+        `WITH ArticlesMentioningCompanies as (
+            SELECT article_id, c.company_name as company_name, m.ticker as ticker
+            FROM CompanyMentions c JOIN Company m
+            on c.company_name = m.company_name
+        ), TitleMentions AS (
+            SELECT a.ticker as ticker, w.article_id as article_id
+            FROM WSJArticles w JOIN
+                 ArticlesMentioningCompanies a on w.article_id = a.article_id
+            WHERE w.date >= STR_TO_DATE('${startday}','%Y-%m-%d')
+                AND w.date <= STR_TO_DATE('${endday}','%Y-%m-%d')
+                AND (w.title LIKE CONCAT('%', a.ticker, '%')
+                        OR w.title LIKE CONCAT('%', a.company_name, '%')
+                    )
+        ), ContentMentions AS (
+            SELECT a.ticker as ticker, w.article_id as article_id
+            FROM WSJArticles w JOIN
+                 ArticlesMentioningCompanies a on w.article_id = a.article_id
+            WHERE w.date >= STR_TO_DATE('${startday}','%Y-%m-%d')
+                AND w.date <= STR_TO_DATE('${endday}','%Y-%m-%d')
+                AND ( w.content LIKE CONCAT('%', a.ticker, '%')
+                        OR w.content LIKE CONCAT('%', a.company_name, '%')
+                    )
+        )
+        SELECT temp1.ticker
+            FROM
+            (SELECT t.ticker, COUNT(*) as numBigMentions
+            FROM TitleMentions t JOIN ContentMentions c ON t.ticker = c.ticker AND t.article_id = c.article_id
+            GROUP BY ticker) AS temp1
+        NATURAL JOIN
+            (SELECT ticker, COUNT(*) as numSmallMentions
+            FROM ContentMentions
+            GROUP BY ticker) AS temp2
+        ORDER BY (2 * numBigMentions + 1 * numSmallMentions) desc
+        LIMIT 10
     `,
         function (error, results, fields) {
             if (error) {
