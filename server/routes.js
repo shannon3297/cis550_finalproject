@@ -173,34 +173,40 @@ async function articlesBeforeBigMoves(req, res) {
                  JOIN ShiftedStocks ss ON s.ticker = ss.ticker
             AND s.date = ss.dateToCompare
       ), BigMentions AS (
-       SELECT w.article_id, w.date, w.url
+       SELECT w.article_id, w.date, w.url, w.content
         FROM WSJArticles w, CompanyName c
         WHERE title LIKE '%${ticker}%'
         OR title LIKE CONCAT('%', c.company_name, '%')
         OR subtitle LIKE '%${ticker}%'
         OR subtitle LIKE CONCAT('%', c.company_name, '%')
       ), SmallMentions AS (
-        SELECT w.article_id, w.date, w.url
+        SELECT w.article_id, w.date, w.url, w.content
         FROM WSJArticles w, CompanyName c
         WHERE content LIKE '%${ticker}%'
            OR content LIKE CONCAT('%', c.company_name, '%')
       ), ScoredMentions AS (
-        SELECT b.article_id, b.url, DATE_ADD(b.date, INTERVAL 1 DAY) as dateAfter, DATE_SUB(b.date, INTERVAL 1 DAY) as dateBefore, IF(b.article_id IS NOT NULL AND s.article_id IS NOT NULL, 1.5, (IF(b.article_id IS NOT NULL, 1, 0.5))) as score
+        SELECT b.article_id, b.url, b.content, DATE_ADD(b.date, INTERVAL 1 DAY) as dateAfter, DATE_SUB(b.date, INTERVAL 1 DAY) as dateBefore, IF(b.article_id IS NOT NULL AND s.article_id IS NOT NULL, 1.5, (IF(b.article_id IS NOT NULL, 1, 0.5))) as score
         FROM BigMentions b LEFT OUTER JOIN SmallMentions s ON b.article_id = s.article_id
         UNION
-        SELECT s.article_id, s.url, DATE_ADD(s.date, INTERVAL 1 DAY) as dateAfter, DATE_SUB(s.date, INTERVAL 1 DAY) as dateBefore, IF(b.article_id IS NOT NULL AND s.article_id IS NOT NULL, 1.5, (IF(b.article_id IS NOT NULL, 1, 0.5))) as score
+        SELECT s.article_id, s.url, s.content, DATE_ADD(s.date, INTERVAL 1 DAY) as dateAfter, DATE_SUB(s.date, INTERVAL 1 DAY) as dateBefore, IF(b.article_id IS NOT NULL AND s.article_id IS NOT NULL, 1.5, (IF(b.article_id IS NOT NULL, 1, 0.5))) as score
         FROM BigMentions b RIGHT OUTER JOIN SmallMentions s ON b.article_id = s.article_id
       ), MovesAndMentionsJoined AS (
-        SELECT date, dailyMoveAbs, url, article_id, row_number() over (partition by date order by score desc) as row_num
+        SELECT date, dailyMoveAbs, url, article_id, content, row_number() over (partition by date order by score desc) as row_num
         FROM LargestMoves l JOIN ScoredMentions m ON l.date = m.dateAfter
       )
-      SELECT DATE_FORMAT(date, "%Y-%m-%d") as dateOfPriceMove, dailyMoveAbs, article_id, url
+      SELECT DATE_FORMAT(date, "%Y-%m-%d") as dateOfPriceMove, dailyMoveAbs, article_id, url, content
       FROM MovesAndMentionsJoined
       WHERE row_num = 1
       ORDER BY dailyMoveAbs desc
       LIMIT 5;`,
         function (error, results, fields) {
-            console.log(results[0])
+            results[0]["content"] = results[0]["content"].substring(0,results[0]["content"].indexOf("\n"));
+            results[1]["content"] = results[1]["content"].substring(0,results[1]["content"].indexOf("\n"));
+            results[2]["content"] = results[2]["content"].substring(0,results[2]["content"].indexOf("\n"));
+            results[3]["content"] = results[3]["content"].substring(0,results[3]["content"].indexOf("\n"));
+            results[4]["content"] = results[4]["content"].substring(0,results[4]["content"].indexOf("\n"));
+
+
             if (error) {
                 console.log(error)
                 res.json({ error: error })
@@ -670,6 +676,6 @@ module.exports = {
     industriesMostPress,
     industriesToMoveSoon,
     industriesPerformance,
-    allStocks,
+    // allStocks,
     stockData,
 }
