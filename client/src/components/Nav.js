@@ -6,8 +6,9 @@ function Nav() {
             <div className="flex-apart py-4">
                 <img class="h-12" src={require("../img/logo.png").default} />
                 <div class="flex flex-row space-x-6">
-                    <Link to="/home">Home</Link>
-                    <Link to="/stock">Stock</Link>
+                    <Link to="/overview">Overview</Link>
+                    <Link to="/findstock">Find Stock</Link>
+                    <Link to="/industries">Industries</Link>
                 </div>
             </div>
         </div>

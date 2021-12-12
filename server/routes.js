@@ -287,7 +287,7 @@ async function stocksBiggestVolatility(req, res) {
     const date = req.query.date ? req.query.date : "2021-10-29"
 
     connection.query(
-        `SELECT ticker, (high / low) as intradayMovement
+        `SELECT ticker, ROUND((high / low), 2) as intradayMovement
     FROM Stocks
     WHERE date =  STR_TO_DATE('${date}','%Y-%m-%d')  
     ORDER BY intradayMovement desc
@@ -476,7 +476,7 @@ async function industriesMostVolatility(req, res) {
     const date = req.query.date ? req.query.date : "2021-11-12"
 
     connection.query(
-        `SELECT industry, AVG (high / low) as intradayMovement
+        `SELECT industry, ROUND(AVG (high / low), 3) as intradayMovement
     FROM Stocks s
       JOIN Company c ON s.ticker = c.ticker
     WHERE date = STR_TO_DATE('${date}','%Y-%m-%d')
@@ -589,7 +589,7 @@ async function industriesToMoveSoon(req, res) {
         AND w.date >= STR_TO_DATE('${oldday}','%Y-%m-%d')
         GROUP BY ticker
        )
-       SELECT industry, AVG(r.numMentions / e.numMentions) as mentionIncrease, avg(priceRange) as avgRange
+       SELECT industry, ROUND(AVG(r.numMentions / e.numMentions), 3) as mentionIncrease, ROUND(avg(priceRange), 3) as avgRange
        FROM moveData m
        JOIN mentionsRecent r ON m.ticker = r.ticker
        JOIN mentionsEarlier e ON m.ticker = e.ticker
@@ -640,7 +640,7 @@ async function industriesPerformance(req, res) {
         FROM Stocks
         WHERE date = DATE_SUB("${date}", INTERVAL 1 DAY)
      )
-     SELECT industry, AVG(daymove) as performance
+     SELECT industry, ROUND(AVG(daymove), 4) as performance
      FROM
        (SELECT a.ticker, (a.close / b.close) AS daymove
        FROM OneDayAgo a
