@@ -5,6 +5,7 @@ import TextField from "@mui/material/TextField"
 import AdapterDateFns from "@mui/lab/AdapterDateFns"
 import LocalizationProvider from "@mui/lab/LocalizationProvider"
 import DesktopDatePicker from "@mui/lab/DesktopDatePicker"
+import format from "date-fns/format"
 
 const colors = ["red", "yellow", "green", "black", "white"]
 let SERVER_URL = "http://localhost:8080"
@@ -18,6 +19,7 @@ class Industries extends React.Component {
             searchMatches: [],
             stockPriceData: [],
             articles: [],
+            datePicked: "2021-2-20",
             industriesI: [{industry: 'loading', intradayMovement: 'loading...'}],
             industriesII: [{industry: 'loading...', numMentions: 'loading...'}],
             industriesIII: [{industry: 'loading...', mentionIncrease: 'loading...', avgRange: 'loading...'}],
@@ -26,14 +28,14 @@ class Industries extends React.Component {
         // this.inputRef = React.createRef()
     }
 
-    dateToUnix = (dateString) => {
-        const toDate = moment(dateString, "DD-MM-YY").toDate()
-        const toUnix = toDate.getTime()
-        return toUnix
-    }
+    // dateToUnix = (dateString) => {
+    //     const toDate = moment(dateString, "DD-MM-YY").toDate()
+    //     const toUnix = toDate.getTime()
+    //     return toDate
+    // }
 
     componentDidMount() {
-        fetch(SERVER_URL + "/industriesMostVolatility") // industriesI
+        fetch(SERVER_URL + "/industriesMostVolatility?date=" + this.state.datePicked) // industriesI
             .then((res) => res.json())
             .then((result) => {
                 this.setState({ industriesI: result.results })
@@ -60,7 +62,7 @@ class Industries extends React.Component {
     
     render() {
         return (
-            <>
+            <>  
                 <div className="bg-white w-full flex-center p-8">           {/* Section I */}
                     <div className="text-lg my-4">I. intraday volatility</div>
                     <div className="text-sm my-4">This measure uses the highest and lowest  prices of the day.</div>
@@ -73,10 +75,18 @@ class Industries extends React.Component {
                             
                                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                                     <DesktopDatePicker
-                                        label="Date desktop"
-                                        inputFormat="MM/dd/yyyy"
-                                        value="2020-12-01"
-                                        onChange={this.getStockStats}
+                                        label="Pick a Date!"
+                                        inputFormat="yyyy-MM-dd"
+                                        minDate={new Date(2020, 11, 1)}
+                                        dateFormat="yyyy-MM-dd"
+                                        maxDate={new Date(2021, 11, 1)}
+                                        value={this.state.datePicked}  
+                                        onChange={(newValue) => {
+                                            this.state.datePicked = format(newValue, "yyyy-MM-dd");
+                                            // setValue(newValue)
+                                            // console.log(this.state.datePicked)
+                                            {/*THIS STUPID THING ISNT CHANGING ON TIME!*/}
+                                          }}
                                         renderInput={(params) => <TextField {...params} />}
                                     />
                                 </LocalizationProvider>
