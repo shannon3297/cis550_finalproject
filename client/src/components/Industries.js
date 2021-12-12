@@ -18,8 +18,12 @@ class Industries extends React.Component {
             searchMatches: [],
             stockPriceData: [],
             articles: [],
+            industriesI: [{industry: 'loading', intradayMovement: 'loading...'}],
+            industriesII: [{industry: 'loading...', numMentions: 'loading...'}],
+            industriesIII: [{industry: 'loading...', mentionIncrease: 'loading...', avgRange: 'loading...'}],
+            industriesIV: [{industry: 'loading...', performance: 'loading...'}]
         }
-        this.inputRef = React.createRef()
+        // this.inputRef = React.createRef()
     }
 
     dateToUnix = (dateString) => {
@@ -29,54 +33,35 @@ class Industries extends React.Component {
     }
 
     componentDidMount() {
-        fetch(SERVER_URL + "/allStocks")
+        fetch(SERVER_URL + "/industriesMostVolatility") // industriesI
             .then((res) => res.json())
             .then((result) => {
-                this.setState({ allTickers: result.results, searchMatches: result.results })
+                this.setState({ industriesI: result.results })
+            })
+        
+        fetch(SERVER_URL + "/industriesMostPress") // industriesII
+            .then((res) => res.json())
+            .then((result) => {
+                this.setState({ industriesII: result.results })
+            })
+        
+        fetch(SERVER_URL + "/industriesToMoveSoon") // industriesIII
+            .then((res) => res.json())
+            .then((result) => {
+                this.setState({ industriesIII: result.results })
+            })
+        
+        fetch(SERVER_URL + "/industriesPerformance") // industriesIV
+            .then((res) => res.json())
+            .then((result) => {
+                this.setState({ industriesIV: result.results })
             })
     }
-
-    fetchStockData(ticker) {
-        console.log(ticker)
-        //let ticker = e.target.value
-        this.inputRef.current.value = ticker
-
-        Promise.all([
-            fetch(SERVER_URL + "/stockData?ticker=" + ticker).then((res) => res.json()),
-            fetch(SERVER_URL + "/articlesBeforeBigMoves?ticker=" + ticker).then((res) => res.json()),
-        ]).then((result) => {
-            this.setState({
-                stockPriceData: result[0].results.map((item) => ({
-                    ...item,
-                    date: new Date(item.date),
-                    numericalDate: Date.parse(item.date),
-                    stringDate: item.date.substring(0, 10),
-                })),
-                articles: result[1].results,
-                searchActive: false,
-            })
-        })
-    }
-
-    updateAutofill = (e) => {
-        let search = e.currentTarget.value
-
-        let matches = this.state.allTickers.filter(
-            (item) =>
-                item.name.toLowerCase().includes(search.toLowerCase()) ||
-                item.ticker.toLowerCase().includes(search.toLowerCase())
-        )
-        this.setState({
-            searchMatches: matches,
-        })
-    }
-
-    getStockStats = (e) => {}
-
+    
     render() {
         return (
             <>
-                <div className="bg-white w-full flex-center p-8"> {/* Section I */}
+                <div className="bg-white w-full flex-center p-8">           {/* Section I */}
                     <div className="text-lg my-4">I. intraday volatility</div>
                     <div className="text-sm my-4">This measure uses the highest and lowest  prices of the day.</div>
                     <div className="container flex-center"> {/*Row #1: Some of the simple stats */}
@@ -99,11 +84,11 @@ class Industries extends React.Component {
                             <div className="flex flex-row">
                                 <div>
                                     <div>Industry</div>
-                                    <div>1.2</div>
+                                    {this.state.industriesI.map((v) => {return( <h6>{v.industry} </h6>)})}
                                 </div>
                                 <div>
                                     <div>Movement</div>
-                                    <div>1.2</div>
+                                    {this.state.industriesI.map((v) => {return( <h6>{v.intradayMovement} </h6>)} )}
                                 </div>
                             </div>
                         </div>
@@ -114,6 +99,8 @@ class Industries extends React.Component {
                     <div className="text-sm my-4">Over the last.</div>
                     <div className="container flex-center">
                         <div className="flex flex-apart text-white">
+                            
+                            
                             <div>
                                 <div className="text-lg my-4">Industries in the news</div>
                                 <div className="text-sm my-4">Here’s the industries receiving the top 3 number of company mentions in WSJ articles. </div>
@@ -121,17 +108,17 @@ class Industries extends React.Component {
                             <div className="flex flex-row">
                                 <div>
                                     <div>Industry</div>
-                                    <div>1.2</div>
+                                    {this.state.industriesII.map((v) => {return( <h6>{v.industry} </h6>)} )}
                                 </div>
                                 <div>
                                     <div>News Mentions</div>
-                                    <div>1.2</div>
+                                    {this.state.industriesII.map((v) => {return( <h6>{v.numMentions} </h6>)} )}
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className="bg-white w-full flex-center p-8"> {/* Section III */}
+                <div className="bg-white w-full flex-center p-8">           {/* Section III */}
                     <div className="text-lg my-4">III. soon risers</div>
                     <div className="text-sm my-4"></div>
                     <div className="container flex-center">
@@ -144,15 +131,15 @@ class Industries extends React.Component {
                             <div className="flex flex-row">
                                 <div>
                                     <div>Industry</div>
-                                    <div>1.2</div>
+                                    {this.state.industriesIII.map((v) => {return( <h6>{v.industry} </h6>)} )}
                                 </div>
                                 <div>
                                     <div>Increase in mentions</div>
-                                    <div>1.2</div>
+                                    {this.state.industriesIII.map((v) => {return( <h6>{v.mentionIncrease} </h6>)} )}
                                 </div>
                                 <div>
                                     <div>Price Range</div>
-                                    <div>1.2</div>
+                                    {this.state.industriesIII.map((v) => {return( <h6>{v.avgRange} </h6>)} )}
                                 </div>
                             </div>
                         </div>
@@ -170,11 +157,11 @@ class Industries extends React.Component {
                             <div className="flex flex-row">
                                 <div>
                                     <div>Industry</div>
-                                    <div>1.2</div>
+                                    {this.state.industriesIV.map((v) => {return( <h6>{v.industry} </h6>)} )}
                                 </div>
                                 <div>
                                     <div>Performance</div>
-                                    <div>1.2</div>
+                                    {this.state.industriesIV.map((v) => {return( <h6>{v.performance} </h6>)} )}
                                 </div>
                             </div>
                         </div>
