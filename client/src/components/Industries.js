@@ -58,6 +58,14 @@ class Industries extends React.Component {
             .then((result) => {
                 this.setState({ industriesIV: result.results })
             })
+        
+        let ticker = 'AAPL'
+        fetch('https://finnhub.io/api/v1/quote?symbol=' + ticker + '&token=c6r6djiad3i891nj8vfg') // LIVE STOCK PRICE
+            .then((res) => res.json())
+            .then((result) => {
+                console.log(result.c)
+            })
+            
     }
     
     render() {
