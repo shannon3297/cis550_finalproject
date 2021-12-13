@@ -22,7 +22,9 @@ class FindStock extends React.Component {
             stockPriceData: [],
             articles: [],
             simpleStats: [{minMove: "loading...", maxMove: "loading...", avgMove: "loading..."}],
-            currPrice: 'loading...'
+            currPrice: 'loading...',
+            recentArticles: [{title: "loading...", date: 'loading...', url: ""}],
+            bigMovers: []
         }
         this.inputRef = React.createRef()
     }
@@ -31,6 +33,19 @@ class FindStock extends React.Component {
         const toDate = moment(dateString, "DD-MM-YY").toDate()
         const toUnix = toDate.getTime()
         return toUnix
+    }
+
+    getRecentArticles() {
+        console.log(this.state.activeTicker)
+        let url = SERVER_URL + "/stockStats" 
+            + (this.state.activeTicker ? "?ticker=" + this.state.activeTicker : "")
+        console.log(url)
+        fetch(url)
+            .then((res) => res.json())
+            .then((result) => {
+                console.log("results are", result.results)
+                this.setState({ recentArticles: result.results })
+            })
     }
 
     getSimpleStats(date) {
@@ -48,6 +63,18 @@ class FindStock extends React.Component {
             })
     }
 
+    getBigMovers(date) {
+        let url = SERVER_URL + "/stockStats" 
+            + (date ? "?date=" + date : "")
+        console.log(url)
+        fetch(url)
+            .then((res) => res.json())
+            .then((result) => {
+                console.log("results are", result.results)
+                this.setState({ bigMovers: result.results })
+            })
+    }
+
     getCurrPrice() {
         fetch('https://finnhub.io/api/v1/quote?symbol=' + this.state.activeTicker + '&token=c6r6djiad3i891nj8vfg') // LIVE STOCK PRICE
             .then((res) => res.json())
@@ -56,9 +83,14 @@ class FindStock extends React.Component {
                 console.log('Got the live price: ', result.c)
             })
     }
+
+
     
 
     componentDidMount() {
+
+        this.getBigMovers(null)
+
         fetch(SERVER_URL + "/allStocks")
             .then((res) => res.json())
             .then((result) => {
@@ -70,6 +102,7 @@ class FindStock extends React.Component {
             console.log("getting", sp.get("ticker"))
             this.fetchStockData(sp.get("ticker"))
         }
+
     }
 
     fetchStockData(ticker) {
@@ -214,9 +247,9 @@ class FindStock extends React.Component {
                 <div className="bg-white w-full flex-center p-8 paddingBottom p-60">
                     {" "}
                     {/* Section I */}
-                    <div style={sectionHeader}>I. intraday volatility</div>
+                    <div style={sectionHeader}>I. simple start</div>
                     <div style={subSection} className="text-sm my-4">
-                        This measure uses the highest and lowest prices of the day.
+                        To start off, let's keep it simple including just the basics.
                     </div>
                     <div className="container flex-center">
                         <div className="flex flex-apart text-black">
@@ -268,44 +301,76 @@ class FindStock extends React.Component {
                     </div>
                 </div>
 
-                <div className="bg-blue w-full flex-center p-8">
+                <div className="bg-blue w-full flex-center p-8 paddingBottom p-60">
+                    {" "}
+                    {/* Section II */}
+                    <div style={sectionHeader}>II. recent fame</div>
+                    <div style={subSection} className="text-sm my-4">
+                    </div>
                     <div className="container flex-center">
-                        <div className="flex flex-apart text-white">
+                        <div className="flex flex-apart text-black">
                             <div>
-                                <div className="text-lg my-4">Some of the simple stats</div>
-                                <div className="text-sm my-4">Let's see how the stock did on the chosen date.</div>
-
-                                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                    <DesktopDatePicker
-                                        label="Date desktop"
-                                        inputFormat="MM/dd/yyyy"
-                                        value="2020-12-01"
-                                        onChange={this.getStockStats}
-                                        renderInput={(params) => <TextField {...params} />}
-                                    />
-                                </LocalizationProvider>
+                                <div style={Heading} className="text-lg my-4">
+                                    Explore recent articles
+                                </div>
+                                <div style={subHeading} className="text-sm my-4">
+                                    These are the most recent articles to date concerning this company.
+                                </div>
                             </div>
                             <div className="flex flex-row">
-                                <div>
-                                    <div>High</div>
-                                    <div>1.2</div>
+                                <div> {/* TODO Add link to redirect externally! */}
+                                    <div style={columnHeader}>Title</div>
+                                    {this.state.recentArticles.map((v) => {
+                                        return <h6 style={content}>{v.title} </h6>
+                                    })} 
                                 </div>
                                 <div>
-                                    <div>Low</div>
-                                    <div>1.2</div>
-                                </div>
-                                <div>
-                                    <div>Intraday Volatility</div>
-                                    <div>1.2</div>
-                                </div>
-                                <div>
-                                    <div>Volume</div>
-                                    <div>1.2</div>
+                                    <div style={columnHeader}>Date</div>
+                                    {this.state.recentArticles.map((v) => {
+                                        return <h6 style={content}>{v.date} </h6>
+                                    })}
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <div className="bg-white w-full flex-center p-8 paddingBottom p-60">
+                    {" "}
+                    {/* Section III */}
+                    <div style={sectionHeader}>III. @mention and jump</div>
+                    <div style={subSection} className="text-sm my-4">
+                        The whole world knows about it, once it's in the news.
+                    </div>
+                    <div className="container flex-center">
+                        <div className="flex flex-apart text-black">
+                            <div>
+                                <div style={Heading} className="text-lg my-4">
+                                    Impact of news on stocks
+                                </div>
+                                <div style={subHeading} className="text-sm my-4">
+                                We rank the average ratios of how the daily price movement of each stock compares to the times it got mentioned in WSJ.
+                                </div>
+                            </div>
+                            <div className="flex flex-row">
+                                <div>
+                                    <div style={columnHeader}>Stock</div>
+                                    {this.state.bigMovers.map((v) => {
+                                        return <h6 style={content}>{v.ticker} </h6>
+                                    })}
+                                </div>
+                                <div>
+                                    <div style={columnHeader}>Ratio</div>
+                                    {this.state.bigMovers.map((v) => {
+                                        return <h6 style={content}>{v.dailyMove} </h6>
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
             </>
         )
     }
