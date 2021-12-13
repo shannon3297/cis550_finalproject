@@ -5,6 +5,8 @@ import TextField from "@mui/material/TextField"
 import AdapterDateFns from "@mui/lab/AdapterDateFns"
 import LocalizationProvider from "@mui/lab/LocalizationProvider"
 import DesktopDatePicker from "@mui/lab/DesktopDatePicker"
+import format from "date-fns/format"
+
 
 let SERVER_URL = "http://localhost:8080"
 
@@ -19,6 +21,8 @@ class FindStock extends React.Component {
             searchMatches: [],
             stockPriceData: [],
             articles: [],
+            simpleStats: [{minMove: "loading...", maxMove: "loading...", avgMove: "loading..."}],
+            currPrice: 'loading...'
         }
         this.inputRef = React.createRef()
     }
@@ -28,6 +32,31 @@ class FindStock extends React.Component {
         const toUnix = toDate.getTime()
         return toUnix
     }
+
+    getSimpleStats(date) {
+        console.log(this.state.activeTicker)
+        let url = SERVER_URL + "/stockStats" 
+            + (date ? "?startday=" + date : "")
+            + (date ? "&endday=" + date : "")
+            + (this.state.activeTicker ? "&ticker=" + this.state.activeTicker : "")
+        console.log(url)
+        fetch(url)
+            .then((res) => res.json())
+            .then((result) => {
+                console.log("results are", result.results)
+                this.setState({ simpleStats: result.results })
+            })
+    }
+
+    getCurrPrice() {
+        fetch('https://finnhub.io/api/v1/quote?symbol=' + this.state.activeTicker + '&token=c6r6djiad3i891nj8vfg') // LIVE STOCK PRICE
+            .then((res) => res.json())
+            .then((result) => {
+                this.state.currPrice = result.c
+                console.log('Got the live price: ', result.c)
+            })
+    }
+    
 
     componentDidMount() {
         fetch(SERVER_URL + "/allStocks")
@@ -44,6 +73,7 @@ class FindStock extends React.Component {
     }
 
     fetchStockData(ticker) {
+        this.state.activeTicker = ticker
         console.log(ticker)
         //let ticker = e.target.value
         if (this.inputRef.current) {
@@ -83,6 +113,45 @@ class FindStock extends React.Component {
     getStockStats = (e) => {}
 
     render() {
+
+        const sectionHeader = {
+            // paddingTop: '120px',
+            fontSize: "40px",
+            fontStyle: "normal",
+            fontWeight: "700",
+            lineHeight: "48px",
+            letterSpacing: "0.20000000298023224px",
+            textAlign: "center",
+        }
+
+        const subSection = {}
+
+        const Heading = {
+            fontSize: "20px",
+
+            paddingTop: "100px",
+            fontWeight: "bold",
+        }
+
+        const subHeading = {
+            width: "400px",
+            paddingRight: "50px",
+            paddingBottom: "30px",
+            textAlign: "justify",
+        }
+
+        const columnHeader = {
+            paddingTop: "100px",
+
+            width: "200px",
+            fontWeight: "bold",
+            padding: "10px",
+        }
+
+        const content = {
+            padding: "10px",
+        }
+
         return (
             <>
                 <div className="bg-blue w-full flex-center p-8">
@@ -114,6 +183,7 @@ class FindStock extends React.Component {
                                 </div>
                             )}
                         </div>
+                        <div className="text-white">Live current price: { this.state.currPrice }</div>
 
                         <div className="p-4 flex-center w-full">
                             <div class="h-96 w-full">
@@ -140,6 +210,64 @@ class FindStock extends React.Component {
                         </div>
                     </div>
                 </div>
+                
+                <div className="bg-white w-full flex-center p-8 paddingBottom p-60">
+                    {" "}
+                    {/* Section I */}
+                    <div style={sectionHeader}>I. intraday volatility</div>
+                    <div style={subSection} className="text-sm my-4">
+                        This measure uses the highest and lowest prices of the day.
+                    </div>
+                    <div className="container flex-center">
+                        <div className="flex flex-apart text-black">
+                            <div>
+                                <div style={Heading} className="text-lg my-4">
+                                    Some of the simple stats
+                                </div>
+                                <div style={subHeading} className="text-sm my-4">
+                                    Let's see how the stock did on the chosen date.
+                                </div>
+
+                                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                                    <DesktopDatePicker
+                                        label="Pick a Date!"
+                                        inputFormat="yyyy-MM-dd"
+                                        minDate={new Date(2020, 10, 1)}
+                                        dateFormat="yyyy-MM-dd"
+                                        maxDate={new Date(2021, 10, 31)}
+                                        value={this.state.datePicked}
+                                        onChange={(newValue) => {
+                                            this.setState({ datePicked: newValue })
+                                            this.getSimpleStats(format(newValue, "yyyy-MM-dd"))
+                                        }}
+                                        renderInput={(params) => <TextField {...params} />}
+                                    />
+                                </LocalizationProvider>
+                            </div>
+                            <div className="flex flex-row">
+                                <div>
+                                    <div style={columnHeader}>Min Movement</div>
+                                    {this.state.simpleStats.map((v) => {
+                                        return <h6 style={content}>{v.minMove} </h6>
+                                    })}
+                                </div>
+                                <div>
+                                    <div style={columnHeader}>Max Movement</div>
+                                    {this.state.simpleStats.map((v) => {
+                                        return <h6 style={content}>{v.maxMove} </h6>
+                                    })}
+                                </div>
+                                <div>
+                                    <div style={columnHeader}>Avg Movement</div>
+                                    {this.state.simpleStats.map((v) => {
+                                        return <h6 style={content}>{v.avgMove} </h6>
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div className="bg-blue w-full flex-center p-8">
                     <div className="container flex-center">
                         <div className="flex flex-apart text-white">

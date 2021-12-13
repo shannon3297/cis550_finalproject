@@ -63,8 +63,8 @@ async function stockData(req, res) {
 
 async function stockStats(req, res) {
     const ticker = req.query.ticker ? req.query.ticker : "TSLA"
-    const startday = req.query.startday ? req.query.startday : "2021-09-01"
-    const endday = req.query.endday ? req.query.endday : "2021-11-01"
+    const startday = req.query.startday ? req.query.startday : "2020-10-01"
+    const endday = req.query.endday ? req.query.endday : "2021-10-31"
 
     connection.query(
         `WITH DailyMoves AS (
