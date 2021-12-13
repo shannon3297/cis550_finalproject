@@ -64,7 +64,7 @@ async function stockData(req, res) {
 async function stockStats(req, res) {
     const ticker = req.query.ticker ? req.query.ticker : "TSLA"
     const startday = req.query.startday ? req.query.startday : "2021-09-01"
-    const endday = req.query.endday ? req.query.endday : "2021-11-01"
+    const endday = req.query.endday ? req.query.endday : "2021-10-29"
 
     connection.query(
         `WITH DailyMoves AS (
@@ -400,7 +400,7 @@ async function consistentMovers(req, res) {
  */
 async function companiesWithMostPress(req, res) {
     const startday = req.query.startday ? req.query.startday : "2021-09-01"
-    const endday = req.query.endday ? req.query.endday : "2021-11-01"
+    const endday = req.query.endday ? req.query.endday : "2021-10-29"
 
     connection.query(
         `WITH ArticlesMentioningCompanies as (
@@ -471,7 +471,7 @@ async function companiesWithMostPress(req, res) {
  */
 
 async function industriesMostVolatility(req, res) {
-    const date = req.query.date ? req.query.date : "2021-11-12"
+    const date = req.query.date ? req.query.date : "2021-10-29"
 
     connection.query(
         `SELECT industry, ROUND(AVG (high / low), 3) as intradayMovement
@@ -510,8 +510,8 @@ async function industriesMostVolatility(req, res) {
  */
 
 async function industriesMostPress(req, res) {
-    const startday = req.query.startday ? req.query.startday : "2021-01-01"
-    const endday = req.query.startday ? req.query.startday : "2021-11-12"
+    const startday = req.query.startday ? req.query.startday : "2021-09-01"
+    const endday = req.query.startday ? req.query.startday : "2021-10-29"
 
     connection.query(
         `WITH industries as (
@@ -626,27 +626,24 @@ async function industriesToMoveSoon(req, res) {
  * @param {*} res
  */
 async function industriesPerformance(req, res) {
-    const date = req.query.date ? req.query.date : "2021-11-12"
+    const date = req.query.date ? req.query.date : "2021-10-29"
 
     connection.query(
-        `WITH OneDayAgo AS (
-        SELECT ticker, date, close
-        FROM Stocks
-        WHERE date = STR_TO_DATE('${date}','%Y-%m-%d')
-     ), TwoDaysAgo AS (
-        SELECT ticker, date, close
-        FROM Stocks
-        WHERE date = DATE_SUB("${date}", INTERVAL 1 DAY)
-     )
-     SELECT industry, ROUND(AVG(daymove), 4) as performance
-     FROM
-       (SELECT a.ticker, (a.close / b.close) AS daymove
-       FROM OneDayAgo a
-        JOIN TwoDaysAgo b ON a.ticker = b.ticker) AS onetwodays
-     JOIN Company
-     GROUP BY industry
-     ORDER BY AVG(daymove) desc
-     
+        `WITH LabeledTickerTable AS (
+            SELECT ticker, date, close, row_number() over (partition by ticker ORDER BY date desc) as row_num
+            FROM Stocks
+            WHERE date <= STR_TO_DATE('${date}','%Y-%m-%d')
+              AND date >= DATE_SUB('${date}', INTERVAL 3 DAY)
+            ORDER BY row_num asc
+        ), DailyMoves AS (
+            SELECT l2.ticker as ticker, l2.date as date, l2.close / l.close as dailyMove
+            FROM LabeledTickerTable l JOIN LabeledTickerTable l2 on l.ticker = l2.ticker and l.row_num = (l2.row_num + 1)
+            where l2.date = STR_TO_DATE('${date}','%Y-%m-%d')
+        )
+        SELECT industry, AVG(dailyMove) as performance
+             FROM DailyMoves d JOIN Company c on d.ticker = c.ticker
+             GROUP BY industry
+             ORDER BY performance desc
       `,
         function (error, results, fields) {
             if (error) {
