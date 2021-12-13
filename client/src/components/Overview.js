@@ -14,10 +14,11 @@ class Overview extends React.Component {
         this.state = {
             activeTicker: "",
             datePicked: "2021-2-20",
-            stocksI: [{ industry: "loading...", intradayMovement: "loading..." }],
-            stocksII: [{ industry: "loading...", numMentions: "loading..." }],
-            stocksIII: [{ industry: "loading...", mentionIncrease: "loading...", avgRange: "loading..." }],
-            stocksIV: [{ industry: "loading...", performance: "loading..." }],
+            section3Date: "2021-10-14",
+            stocksI: [{ ticker: "loading...", intradayMovement: "loading..." }],
+            stocksII: [{ ticker: "loading...", score: "loading..." }],
+            stocksIII: [{ ticker: "loading...", dailyMove: "loading..." }],
+            stocksIV: [{ ticker: "loading...", performance: "loading..." }],
         }
     }
 
@@ -31,8 +32,24 @@ class Overview extends React.Component {
             })
     }
 
+    getStocksBiggestMovement(date) {
+        this.setState({
+            stocksIII: [{ ticker: "loading...", dailyMove: "loading..." }],
+        })
+        console.log("fetching stocks movers", date)
+
+        fetch(SERVER_URL + "/stocksBiggestMovers" + (date ? "?date=" + date : "")) // industriesII
+            .then((res) => res.json())
+            .then((result) => {
+                this.setState({ stocksIII: result.results })
+            })
+    }
+
     formatMovement(number, fixed = 0, includePlus = true) {
-        return (number > 0 && includePlus ? "+" : "") + (number * 100 - 100).toFixed(fixed) + "%"
+        if (isNaN(number)) {
+            return number
+        }
+        return (number > 1 && includePlus ? "+" : "") + (number * 100 - 100).toFixed(fixed) + "%"
     }
 
     fetchStockData() {
@@ -44,11 +61,7 @@ class Overview extends React.Component {
                 this.setState({ stocksII: result.results })
             })
 
-        fetch(SERVER_URL + "/stocksBiggestMovers") // industriesII
-            .then((res) => res.json())
-            .then((result) => {
-                this.setState({ stocksIII: result.results })
-            })
+        this.getStocksBiggestMovement(this.state.section3Date)
 
         fetch(SERVER_URL + "/consistentMovers") // industriesIII
             .then((res) => res.json())
@@ -178,12 +191,28 @@ class Overview extends React.Component {
                                     Here are the companies that received the most press on Wall Street Journal.
                                     articles.{" "}
                                 </div>
+                                <div style={subHeading} className="text-sm my-4">
+                                    ** Score is determined as 2 times the number of title mentions, plus the number of
+                                    article content mentions.
+                                </div>
                             </div>
                             <div className="flex flex-row">
                                 <div>
                                     <div style={columnHeader}>Stock</div>
                                     {this.state.stocksII.map((v) => {
-                                        return <h6 style={content}>{v.ticker} </h6>
+                                        return (
+                                            <Link to={{ pathname: "/findstock", search: "?ticker=" + v.ticker }}>
+                                                <h6 className="hover:underline" style={content}>
+                                                    {v.ticker}{" "}
+                                                </h6>
+                                            </Link>
+                                        )
+                                    })}
+                                </div>
+                                <div>
+                                    <div style={columnHeader}>Score</div>
+                                    {this.state.stocksII.map((v) => {
+                                        return <h6 style={content}>{v.score} </h6>
                                     })}
                                 </div>
                             </div>
@@ -194,39 +223,52 @@ class Overview extends React.Component {
                     {" "}
                     {/* Section III */}
                     <div style={sectionHeader} className="text-lg my-4">
-                        III. soon risers
+                        III. Biggest movers
                     </div>
                     <div className="text-sm my-4"></div>
                     <div className="container flex-center">
                         <div className="flex flex-apart text-black">
                             <div>
                                 <div style={Heading} className="text-lg my-4">
-                                    Slow now, but starting to buzz
+                                    Click on these stocks to see what happened recently!
                                 </div>
                                 <div style={subHeading} className="text-sm my-4">
-                                    Based on increased mentions of these stocks in WSJ, we expect them to start moving -
-                                    either up or down. Soon! Specifically, if the stock has seen +50% increase in press
-                                    coverage over the last 30 days, compared to the last 60 days, and has remained
-                                    fairly price-constant, then we expect it to move soon.
+                                    These are the stocks with the biggest moves (up or down) on the given trading day,
+                                    relative to the previous day.
                                 </div>
+                                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                                    <DesktopDatePicker
+                                        label="Pick a Date!"
+                                        inputFormat="yyyy-MM-dd"
+                                        minDate={new Date(2020, 11, 1)}
+                                        dateFormat="yyyy-MM-dd"
+                                        maxDate={new Date(2021, 11, 1)}
+                                        value={this.state.section3Date}
+                                        onChange={(newValue) => {
+                                            this.setState({ section3Date: newValue })
+                                            this.getStocksBiggestMovement(format(newValue, "yyyy-MM-dd"))
+                                        }}
+                                        renderInput={(params) => <TextField {...params} />}
+                                    />
+                                </LocalizationProvider>
                             </div>
                             <div className="flex flex-row">
                                 <div>
-                                    <div style={columnHeader}>Industry</div>
+                                    <div style={columnHeader}>Stock</div>
                                     {this.state.stocksIII.map((v) => {
-                                        return <h6 style={content}>{v.industry} </h6>
+                                        return (
+                                            <Link to={{ pathname: "/findstock", search: "?ticker=" + v.ticker }}>
+                                                <h6 className="hover:underline" style={content}>
+                                                    {v.ticker}{" "}
+                                                </h6>
+                                            </Link>
+                                        )
                                     })}
                                 </div>
                                 <div>
-                                    <div style={columnHeader}>Increase in mentions</div>
+                                    <div style={columnHeader}>Percent Change Since Previous Trading Day</div>
                                     {this.state.stocksIII.map((v) => {
-                                        return <h6 style={content}>{v.mentionIncrease} </h6>
-                                    })}
-                                </div>
-                                <div>
-                                    <div style={columnHeader}>Price Range</div>
-                                    {this.state.stocksIII.map((v) => {
-                                        return <h6 style={content}>{v.avgRange} </h6>
+                                        return <h6 style={content}>{this.formatMovement(v.dailyMove)} </h6>
                                     })}
                                 </div>
                             </div>

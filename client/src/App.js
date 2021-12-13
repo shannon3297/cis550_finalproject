@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import FindStock from "./components/FindStock"
 import AdapterDateFns from "@mui/lab/AdapterDateFns"
 import LocalizationProvider from "@mui/lab/LocalizationProvider"
+
 function App() {
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
