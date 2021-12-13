@@ -63,8 +63,8 @@ async function stockData(req, res) {
 
 async function stockStats(req, res) {
     const ticker = req.query.ticker ? req.query.ticker : "TSLA"
-    const startday = req.query.startday ? req.query.startday : "2021-09-01"
-    const endday = req.query.endday ? req.query.endday : "2021-10-29"
+    const startday = req.query.startday ? req.query.startday : "2020-10-01"
+    const endday = req.query.endday ? req.query.endday : "2021-10-31"
 
     connection.query(
         `WITH DailyMoves AS (
@@ -79,7 +79,7 @@ async function stockStats(req, res) {
            where l2.date >= STR_TO_DATE('${startday}','%Y-%m-%d')
                AND l2.date <= "${endday}"
         )
-        SELECT min(dailyMove) as minMove, max(dailyMove) as maxMove, avg(dailyMove) as avgMove
+        SELECT ROUND(min(dailyMove), 3) as minMove, ROUND(max(dailyMove), 3) as maxMove, ROUND(avg(dailyMove), 3) as avgMove
         from DailyMoves`,
         function (error, results, fields) {
             if (error) {
@@ -117,7 +117,7 @@ async function recentArticles(req, res) {
         from Company
         WHERE ticker = '${ticker}'
     )
-    SELECT article_id, url, DATE_FORMAT(date, "%Y-%m-%d") as date
+    SELECT article_id, url, DATE_FORMAT(date, "%Y-%m-%d") as date, WSJArticles.title AS title
     FROM WSJArticles, CompanyName
     WHERE title LIKE '%${ticker}%'
     OR title LIKE CONCAT('%', CompanyName.company_name, '%')

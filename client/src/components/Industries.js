@@ -158,9 +158,9 @@ class Industries extends React.Component {
                                     <DesktopDatePicker
                                         label="Pick a Date!"
                                         inputFormat="yyyy-MM-dd"
-                                        minDate={new Date(2020, 11, 1)}
+                                        minDate={new Date(2020, 10, 1)}
                                         dateFormat="yyyy-MM-dd"
-                                        maxDate={new Date(2021, 11, 1)}
+                                        maxDate={new Date(2021, 10, 31)}
                                         value={this.state.datePicked}
                                         onChange={(newValue) => {
                                             this.setState({ datePicked: newValue })
@@ -169,6 +169,8 @@ class Industries extends React.Component {
                                         renderInput={(params) => <TextField {...params} />}
                                     />
                                 </LocalizationProvider>
+
+                                
                             </div>
                             <div className="flex flex-row">
                                 <div>
