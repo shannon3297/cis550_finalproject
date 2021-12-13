@@ -173,34 +173,39 @@ async function articlesBeforeBigMoves(req, res) {
                  JOIN ShiftedStocks ss ON s.ticker = ss.ticker
             AND s.date = ss.dateToCompare
       ), BigMentions AS (
-       SELECT w.article_id, w.date, w.url
+       SELECT w.article_id, w.date, w.url, w.content
         FROM WSJArticles w, CompanyName c
         WHERE title LIKE '%${ticker}%'
         OR title LIKE CONCAT('%', c.company_name, '%')
         OR subtitle LIKE '%${ticker}%'
         OR subtitle LIKE CONCAT('%', c.company_name, '%')
       ), SmallMentions AS (
-        SELECT w.article_id, w.date, w.url
+        SELECT w.article_id, w.date, w.url, w.content
         FROM WSJArticles w, CompanyName c
         WHERE content LIKE '%${ticker}%'
            OR content LIKE CONCAT('%', c.company_name, '%')
       ), ScoredMentions AS (
-        SELECT b.article_id, b.url, DATE_ADD(b.date, INTERVAL 1 DAY) as dateAfter, DATE_SUB(b.date, INTERVAL 1 DAY) as dateBefore, IF(b.article_id IS NOT NULL AND s.article_id IS NOT NULL, 1.5, (IF(b.article_id IS NOT NULL, 1, 0.5))) as score
+        SELECT b.article_id, b.url, b.content, DATE_ADD(b.date, INTERVAL 1 DAY) as dateAfter, DATE_SUB(b.date, INTERVAL 1 DAY) as dateBefore, IF(b.article_id IS NOT NULL AND s.article_id IS NOT NULL, 1.5, (IF(b.article_id IS NOT NULL, 1, 0.5))) as score
         FROM BigMentions b LEFT OUTER JOIN SmallMentions s ON b.article_id = s.article_id
         UNION
-        SELECT s.article_id, s.url, DATE_ADD(s.date, INTERVAL 1 DAY) as dateAfter, DATE_SUB(s.date, INTERVAL 1 DAY) as dateBefore, IF(b.article_id IS NOT NULL AND s.article_id IS NOT NULL, 1.5, (IF(b.article_id IS NOT NULL, 1, 0.5))) as score
+        SELECT s.article_id, s.url, s.content, DATE_ADD(s.date, INTERVAL 1 DAY) as dateAfter, DATE_SUB(s.date, INTERVAL 1 DAY) as dateBefore, IF(b.article_id IS NOT NULL AND s.article_id IS NOT NULL, 1.5, (IF(b.article_id IS NOT NULL, 1, 0.5))) as score
         FROM BigMentions b RIGHT OUTER JOIN SmallMentions s ON b.article_id = s.article_id
       ), MovesAndMentionsJoined AS (
-        SELECT date, dailyMoveAbs, url, article_id, row_number() over (partition by date order by score desc) as row_num
+        SELECT date, dailyMoveAbs, url, article_id, content, row_number() over (partition by date order by score desc) as row_num
         FROM LargestMoves l JOIN ScoredMentions m ON l.date = m.dateAfter
       )
-      SELECT DATE_FORMAT(date, "%Y-%m-%d") as dateOfPriceMove, dailyMoveAbs, article_id, url
+      SELECT DATE_FORMAT(date, "%Y-%m-%d") as dateOfPriceMove, dailyMoveAbs, article_id, url, content
       FROM MovesAndMentionsJoined
       WHERE row_num = 1
       ORDER BY dailyMoveAbs desc
       LIMIT 5;`,
         function (error, results, fields) {
-            console.log(results[0])
+            results[0]["content"] = results[0]["content"].substring(0, results[0]["content"].indexOf("\n"))
+            results[1]["content"] = results[1]["content"].substring(0, results[1]["content"].indexOf("\n"))
+            results[2]["content"] = results[2]["content"].substring(0, results[2]["content"].indexOf("\n"))
+            results[3]["content"] = results[3]["content"].substring(0, results[3]["content"].indexOf("\n"))
+            results[4]["content"] = results[4]["content"].substring(0, results[4]["content"].indexOf("\n"))
+
             if (error) {
                 console.log(error)
                 res.json({ error: error })
@@ -216,15 +221,37 @@ async function articlesBeforeBigMoves(req, res) {
 // ********************************************
 
 /**
- * Returns list of all stocks for the UI
+ * Returns the top 5 stocks with the highest daily moves on specified date.
+ *
+ * Query params
+ * date - date to conduct this query to. Make sure this is a valid historical trading day.
+ *      (defaults to 2021-10-29)
+ *
+ * Returns 5 x 3
+ * Column name: ticker, date, dailyMove
+ * intradayMovement = stock's close price on date / close price on day before date
+ *
+ * Rows are sorted in descending order of dailyMove
  *
  * @param {*} req
  * @param {*} res
  */
-async function allStocks(req, res) {
+async function stocksBiggestMovers(req, res) {
+    const date = req.query.date ? req.query.date : "2021-10-29"
+
     connection.query(
-        `SELECT ticker, company_name as name
-        FROM Company
+        `WITH LabeledTickerTable AS (
+        SELECT ticker, date, close, row_number() over (partition by ticker ORDER BY date desc) as row_num
+        FROM Stocks
+        WHERE date <= STR_TO_DATE('${date}','%Y-%m-%d')
+          AND date >= DATE_SUB("${date}", INTERVAL 3 DAY)
+        ORDER BY row_num asc
+      )
+      SELECT l2.ticker as ticker, l2.date as date, l2.close / l.close as dailyMove
+      FROM LabeledTickerTable l JOIN LabeledTickerTable l2 on l.ticker = l2.ticker and l.row_num = (l2.row_num + 1)
+      where l2.date = STR_TO_DATE('${date}','%Y-%m-%d')
+      order by dailyMove desc
+      limit 5
     `,
         function (error, results, fields) {
             if (error) {
@@ -239,7 +266,6 @@ async function allStocks(req, res) {
 
 /**
  * Returns the top 5 stocks with the highest intraday price volatiltiy on a specific date.
- * Default value of req.query.numdays is 1.
  * Must make sure that the day that is req.query.numdays days before Oct 31 2021 is a valid
  * trading day, otherwise result will be empty.
  *
@@ -358,7 +384,7 @@ async function consistentMovers(req, res) {
 }
 
 /**
- * Checks which of the 100 most valuable companies have been receiving the most WSJ press
+ * Checks which companies have been receiving the most WSJ press
  * over the date range [startday, endday]. Weights title mentions in WSJ articles more
  * heavily than content mentions.
  *
@@ -379,43 +405,40 @@ async function companiesWithMostPress(req, res) {
     const endday = req.query.endday ? req.query.endday : "2021-11-01"
 
     connection.query(
-        `WITH MostValuableCompanies AS (
-        SELECT * FROM Company
-        ORDER BY market_cap desc
-        LIMIT 100
-      ),
-      TitleMentions AS (
-        SELECT s.ticker, article_id
-        FROM WSJArticles w,
-             MostValuableCompanies s
-        WHERE w.date >= STR_TO_DATE('${startday}','%Y-%m-%d')
-            AND w.date <= STR_TO_DATE('${endday}','%Y-%m-%d')
-            AND (w.title LIKE CONCAT('%', s.ticker, '%')
-                    OR w.title LIKE CONCAT('%', s.company_name, '%')
-                )
-      ), ContentMentions AS (
-        SELECT s.ticker, article_id
-        FROM WSJArticles w,
-             MostValuableCompanies s
-        WHERE w.date >= STR_TO_DATE('${startday}','%Y-%m-%d')
-            AND w.date <= STR_TO_DATE('${endday}','%Y-%m-%d')
-            AND ( w.content LIKE CONCAT('%', s.ticker, '%')
-                    OR w.content LIKE CONCAT('%', s.company_name, '%')
-                )
-      )
-      
-      SELECT temp1.ticker
-      FROM
-      (SELECT t.ticker, COUNT(*) as numBigMentions
-      FROM TitleMentions t JOIN ContentMentions c ON t.ticker = c.ticker AND t.article_id = c.article_id
-      GROUP BY ticker) AS temp1
-      NATURAL JOIN
-      (SELECT ticker, COUNT(*) as numSmallMentions
-      FROM ContentMentions
-      GROUP BY ticker) AS temp2
-      ORDER BY (2 * numBigMentions + 1 * numSmallMentions) desc
-      LIMIT 10
-      
+        `WITH ArticlesMentioningCompanies as (
+            SELECT article_id, c.company_name as company_name, m.ticker as ticker
+            FROM CompanyMentions c JOIN Company m
+            on c.company_name = m.company_name
+        ), TitleMentions AS (
+            SELECT a.ticker as ticker, w.article_id as article_id
+            FROM WSJArticles w JOIN
+                 ArticlesMentioningCompanies a on w.article_id = a.article_id
+            WHERE w.date >= STR_TO_DATE('${startday}','%Y-%m-%d')
+                AND w.date <= STR_TO_DATE('${endday}','%Y-%m-%d')
+                AND (w.title LIKE CONCAT('%', a.ticker, '%')
+                        OR w.title LIKE CONCAT('%', a.company_name, '%')
+                    )
+        ), ContentMentions AS (
+            SELECT a.ticker as ticker, w.article_id as article_id
+            FROM WSJArticles w JOIN
+                 ArticlesMentioningCompanies a on w.article_id = a.article_id
+            WHERE w.date >= STR_TO_DATE('${startday}','%Y-%m-%d')
+                AND w.date <= STR_TO_DATE('${endday}','%Y-%m-%d')
+                AND ( w.content LIKE CONCAT('%', a.ticker, '%')
+                        OR w.content LIKE CONCAT('%', a.company_name, '%')
+                    )
+        )
+        SELECT temp1.ticker
+            FROM
+            (SELECT t.ticker, COUNT(*) as numBigMentions
+            FROM TitleMentions t JOIN ContentMentions c ON t.ticker = c.ticker AND t.article_id = c.article_id
+            GROUP BY ticker) AS temp1
+        NATURAL JOIN
+            (SELECT ticker, COUNT(*) as numSmallMentions
+            FROM ContentMentions
+            GROUP BY ticker) AS temp2
+        ORDER BY (2 * numBigMentions + 1 * numSmallMentions) desc
+        LIMIT 10
     `,
         function (error, results, fields) {
             if (error) {
@@ -638,10 +661,33 @@ async function industriesPerformance(req, res) {
     )
 }
 
+/**
+ * Returns list of all stocks for the UI
+ *
+ * @param {*} req
+ * @param {*} res
+ */
+async function allStocks(req, res) {
+    connection.query(
+        `SELECT ticker, company_name as name
+        FROM Company
+    `,
+        function (error, results, fields) {
+            if (error) {
+                console.log(error)
+                res.json({ error: error })
+            } else if (results) {
+                res.json({ results: results })
+            }
+        }
+    )
+}
+
 module.exports = {
     stockStats,
     recentArticles,
     articlesBeforeBigMoves,
+    stocksBiggestMovers,
     stocksBiggestVolatility,
     consistentMovers,
     companiesWithMostPress,

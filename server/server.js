@@ -16,6 +16,7 @@ app.use(
 app.get("/stockStats", routes.stockStats)
 app.get("/recentArticles", routes.recentArticles)
 app.get("/articlesBeforeBigMoves", routes.articlesBeforeBigMoves)
+app.get("/stocksBiggestMovers", routes.stocksBiggestMovers)
 app.get("/stocksBiggestVolatility", routes.stocksBiggestVolatility)
 app.get("/consistentMovers", routes.consistentMovers)
 app.get("/companiesWithMostPress", routes.companiesWithMostPress)
