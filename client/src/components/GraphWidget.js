@@ -13,13 +13,9 @@ import {
 } from "recharts"
 import moment from "moment"
 
-const colors = ["red", "yellow", "green", "black", "white"]
+const colors = ["red", "yellow", "green", "black", "purple"]
 
 function GraphWidget({ timeseries, articleDates }) {
-    useEffect(() => {
-        console.log("articleDates are", articleDates)
-    }, [articleDates])
-
     const data = React.useMemo(
         () => [
             {
@@ -40,7 +36,6 @@ function GraphWidget({ timeseries, articleDates }) {
 
     const CustomizedDot = (props) => {
         const { cx, cy, stroke, payload, value } = props
-        console.log(payload.stringDate)
 
         let index = articleDates.indexOf(payload.stringDate)
         if (index != -1) {
@@ -53,8 +48,18 @@ function GraphWidget({ timeseries, articleDates }) {
     return (
         // A react-chart hyper-responsively and continuously fills the available
         // space of its parent element automatically
-        <div class="container">
-            <AreaChart width={500} height={300} data={timeseries}>
+        <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+                width={700}
+                height={400}
+                margin={{
+                    top: 10,
+                    right: 30,
+                    left: 0,
+                    bottom: 0,
+                }}
+                data={timeseries}
+            >
                 <defs>
                     <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="white" stopOpacity={0.8} />
@@ -79,7 +84,7 @@ function GraphWidget({ timeseries, articleDates }) {
                     dot={<CustomizedDot />}
                 />
             </AreaChart>
-        </div>
+        </ResponsiveContainer>
     )
 }
 

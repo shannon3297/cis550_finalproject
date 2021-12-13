@@ -173,28 +173,28 @@ async function articlesBeforeBigMoves(req, res) {
                  JOIN ShiftedStocks ss ON s.ticker = ss.ticker
             AND s.date = ss.dateToCompare
       ), BigMentions AS (
-       SELECT w.article_id, w.date, w.url, w.content
+       SELECT w.article_id, w.date, w.url, w.content, w.title
         FROM WSJArticles w, CompanyName c
         WHERE title LIKE '%${ticker}%'
         OR title LIKE CONCAT('%', c.company_name, '%')
         OR subtitle LIKE '%${ticker}%'
         OR subtitle LIKE CONCAT('%', c.company_name, '%')
       ), SmallMentions AS (
-        SELECT w.article_id, w.date, w.url, w.content
+        SELECT w.article_id, w.date, w.url, w.content, w.title
         FROM WSJArticles w, CompanyName c
         WHERE content LIKE '%${ticker}%'
            OR content LIKE CONCAT('%', c.company_name, '%')
       ), ScoredMentions AS (
-        SELECT b.article_id, b.url, b.content, DATE_ADD(b.date, INTERVAL 1 DAY) as dateAfter, DATE_SUB(b.date, INTERVAL 1 DAY) as dateBefore, IF(b.article_id IS NOT NULL AND s.article_id IS NOT NULL, 1.5, (IF(b.article_id IS NOT NULL, 1, 0.5))) as score
+        SELECT b.article_id, b.url, b.content, b.title, DATE_ADD(b.date, INTERVAL 1 DAY) as dateAfter, DATE_SUB(b.date, INTERVAL 1 DAY) as dateBefore, IF(b.article_id IS NOT NULL AND s.article_id IS NOT NULL, 1.5, (IF(b.article_id IS NOT NULL, 1, 0.5))) as score
         FROM BigMentions b LEFT OUTER JOIN SmallMentions s ON b.article_id = s.article_id
         UNION
-        SELECT s.article_id, s.url, s.content, DATE_ADD(s.date, INTERVAL 1 DAY) as dateAfter, DATE_SUB(s.date, INTERVAL 1 DAY) as dateBefore, IF(b.article_id IS NOT NULL AND s.article_id IS NOT NULL, 1.5, (IF(b.article_id IS NOT NULL, 1, 0.5))) as score
+        SELECT s.article_id, s.url, s.content, s.title, DATE_ADD(s.date, INTERVAL 1 DAY) as dateAfter, DATE_SUB(s.date, INTERVAL 1 DAY) as dateBefore, IF(b.article_id IS NOT NULL AND s.article_id IS NOT NULL, 1.5, (IF(b.article_id IS NOT NULL, 1, 0.5))) as score
         FROM BigMentions b RIGHT OUTER JOIN SmallMentions s ON b.article_id = s.article_id
       ), MovesAndMentionsJoined AS (
-        SELECT date, dailyMoveAbs, url, article_id, content, row_number() over (partition by date order by score desc) as row_num
+        SELECT date, dailyMoveAbs, url, article_id, content, title, row_number() over (partition by date order by score desc) as row_num
         FROM LargestMoves l JOIN ScoredMentions m ON l.date = m.dateAfter
       )
-      SELECT DATE_FORMAT(date, "%Y-%m-%d") as dateOfPriceMove, dailyMoveAbs, article_id, url, content
+      SELECT DATE_FORMAT(date, "%Y-%m-%d") as dateOfPriceMove, dailyMoveAbs, article_id, url, content, title
       FROM MovesAndMentionsJoined
       WHERE row_num = 1
       ORDER BY dailyMoveAbs desc
@@ -290,7 +290,7 @@ async function stocksBiggestVolatility(req, res) {
         `SELECT ticker, ROUND((high / low), 2) as intradayMovement
     FROM Stocks
     WHERE date =  STR_TO_DATE('${date}','%Y-%m-%d')  
-    ORDER BY intradayMovement desc
+    ORDER BY abs(intradayMovement) desc
     LIMIT 5
     `,
         function (error, results, fields) {

@@ -39,6 +39,10 @@ class Industries extends React.Component {
             })
     }
 
+    formatMovement(number, fixed = 0) {
+        return (number > 0 ? "+" : "") + (number * 100 - 100).toFixed(fixed) + "%"
+    }
+
     // dateToUnix = (dateString) => {
     //     const toDate = moment(dateString, "DD-MM-YY").toDate()
     //     const toUnix = toDate.getTime()
@@ -46,32 +50,31 @@ class Industries extends React.Component {
     // }
 
     componentDidMount() {
-
         // fetch(SERVER_URL + "/industriesMostPress") // industriesII
         //     .then((res) => res.json())
         //     .then((result) => {
         //         this.setState({ industriesII: result.results })
         //     })
-        
+
         // fetch(SERVER_URL + "/industriesToMoveSoon") // industriesIII
         //     .then((res) => res.json())
         //     .then((result) => {
         //         this.setState({ industriesIII: result.results })
         //     })
-        
+
         // fetch(SERVER_URL + "/industriesPerformance") // industriesIV
         //     .then((res) => res.json())
         //     .then((result) => {
         //         this.setState({ industriesIV: result.results })
         //     })
-        
+
         // let ticker = 'AAPL'
         // fetch('https://finnhub.io/api/v1/quote?symbol=' + ticker + '&token=c6r6djiad3i891nj8vfg') // LIVE STOCK PRICE
         //     .then((res) => res.json())
         //     .then((result) => {
         //         console.log(result.c)
         //     })
-            
+
         this.getIndustriesMostVolatility(null)
 
         fetch(SERVER_URL + "/industriesMostPress") // industriesII
@@ -249,7 +252,7 @@ class Industries extends React.Component {
                                 <div>
                                     <div style={columnHeader}>Increase in mentions</div>
                                     {this.state.industriesIII.map((v) => {
-                                        return <h6 style={content}>{v.mentionIncrease} </h6>
+                                        return <h6 style={content}>{this.formatMovement(v.mentionIncrease)} </h6>
                                     })}
                                 </div>
                                 <div>
@@ -290,7 +293,7 @@ class Industries extends React.Component {
                                 <div>
                                     <div style={columnHeader}>Performance</div>
                                     {this.state.industriesIV.map((v) => {
-                                        return <h6 style={content}>{v.performance} </h6>
+                                        return <h6 style={content}>{this.formatMovement(v.performance)} </h6>
                                     })}
                                 </div>
                             </div>

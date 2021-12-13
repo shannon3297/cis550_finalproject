@@ -6,9 +6,9 @@ import AdapterDateFns from "@mui/lab/AdapterDateFns"
 import LocalizationProvider from "@mui/lab/LocalizationProvider"
 import DesktopDatePicker from "@mui/lab/DesktopDatePicker"
 
-const colors = ["red", "yellow", "green", "black", "white"]
-
 let SERVER_URL = "http://localhost:8080"
+
+const colors = ["red", "yellow", "green", "black", "purple"]
 
 class FindStock extends React.Component {
     constructor(props) {
@@ -35,12 +35,20 @@ class FindStock extends React.Component {
             .then((result) => {
                 this.setState({ allTickers: result.results, searchMatches: result.results })
             })
+
+        const sp = new URLSearchParams(window.location.search)
+        if (sp.has("ticker")) {
+            console.log("getting", sp.get("ticker"))
+            this.fetchStockData(sp.get("ticker"))
+        }
     }
 
     fetchStockData(ticker) {
         console.log(ticker)
         //let ticker = e.target.value
-        this.inputRef.current.value = ticker
+        if (this.inputRef.current) {
+            this.inputRef.current.value = ticker
+        }
 
         Promise.all([
             fetch(SERVER_URL + "/stockData?ticker=" + ticker).then((res) => res.json()),
@@ -107,23 +115,26 @@ class FindStock extends React.Component {
                             )}
                         </div>
 
-                        <div className="p-4">
-                            <GraphWidget
-                                timeseries={this.state.stockPriceData}
-                                articleDates={this.state.articles.map((item) => item.dateOfPriceMove)}
-                            />
-                            <div class="flex flex-row flex-wrap">
+                        <div className="p-4 flex-center w-full">
+                            <div class="h-96 w-full">
+                                <GraphWidget
+                                    timeseries={this.state.stockPriceData}
+                                    articleDates={this.state.articles.map((item) => item.dateOfPriceMove)}
+                                />
+                            </div>
+                            <div class="flex flex-row flex-wrap justify-center">
                                 {this.state.articles.map((article, i) => (
-                                    <div class="bg-white rounded-md w-48 h-48 m-4">
+                                    <a class="bg-white rounded-md w-56 h-56 m-4 p-4" href={article.url} target="_blank">
                                         <div class="flex flex-row items-center">
                                             <div className="w-16 h-16">
-                                                <svg height="16" width="10">
+                                                <svg height="16" width="16">
                                                     <circle cx="8" cy="8" r="8" fill={colors[i]} />
                                                 </svg>
                                             </div>
-                                            <div>{article.url}</div>
+                                            <div class="font-bold">{article.title}</div>
                                         </div>
-                                    </div>
+                                        <div class="font-sm line-clamp-4">{article.content}</div>
+                                    </a>
                                 ))}
                             </div>
                         </div>
