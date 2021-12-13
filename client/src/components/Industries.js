@@ -46,6 +46,32 @@ class Industries extends React.Component {
     // }
 
     componentDidMount() {
+
+        // fetch(SERVER_URL + "/industriesMostPress") // industriesII
+        //     .then((res) => res.json())
+        //     .then((result) => {
+        //         this.setState({ industriesII: result.results })
+        //     })
+        
+        // fetch(SERVER_URL + "/industriesToMoveSoon") // industriesIII
+        //     .then((res) => res.json())
+        //     .then((result) => {
+        //         this.setState({ industriesIII: result.results })
+        //     })
+        
+        // fetch(SERVER_URL + "/industriesPerformance") // industriesIV
+        //     .then((res) => res.json())
+        //     .then((result) => {
+        //         this.setState({ industriesIV: result.results })
+        //     })
+        
+        // let ticker = 'AAPL'
+        // fetch('https://finnhub.io/api/v1/quote?symbol=' + ticker + '&token=c6r6djiad3i891nj8vfg') // LIVE STOCK PRICE
+        //     .then((res) => res.json())
+        //     .then((result) => {
+        //         console.log(result.c)
+        //     })
+            
         this.getIndustriesMostVolatility(null)
 
         fetch(SERVER_URL + "/industriesMostPress") // industriesII
