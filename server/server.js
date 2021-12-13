@@ -3,6 +3,7 @@ const mysql = require("mysql")
 
 const routes = require("./routes")
 const config = require("./config.json")
+const cache = require("memory-cache")
 const cors = require("cors")
 
 const app = express()
@@ -12,6 +13,25 @@ app.use(
     })
 )
 
+let memCache = new cache.Cache()
+let cacheMiddleware = (duration) => {
+    return (req, res, next) => {
+        let key = "__express__" + req.originalUrl || req.url
+        let cacheContent = memCache.get(key)
+        if (cacheContent) {
+            res.send(cacheContent)
+            return
+        } else {
+            res.sendResponse = res.send
+            res.send = (body) => {
+                memCache.put(key, body, duration * 1000)
+                res.sendResponse(body)
+            }
+            next()
+        }
+    }
+}
+
 // Route 1 - register as GET
 app.get("/stockStats", routes.stockStats)
 app.get("/recentArticles", routes.recentArticles)
@@ -20,10 +40,10 @@ app.get("/stocksBiggestMovers", routes.stocksBiggestMovers)
 app.get("/stocksBiggestVolatility", routes.stocksBiggestVolatility)
 app.get("/consistentMovers", routes.consistentMovers)
 app.get("/companiesWithMostPress", routes.companiesWithMostPress)
-app.get("/industriesMostVolatility", routes.industriesMostVolatility)
-app.get("/industriesMostPress", routes.industriesMostPress)
-app.get("/industriesToMoveSoon", routes.industriesToMoveSoon)
-app.get("/industriesPerformance", routes.industriesPerformance)
+app.get("/industriesMostVolatility", cacheMiddleware(3600), routes.industriesMostVolatility)
+app.get("/industriesMostPress", cacheMiddleware(3600), routes.industriesMostPress)
+app.get("/industriesToMoveSoon", cacheMiddleware(3600), routes.industriesToMoveSoon)
+app.get("/industriesPerformance", cacheMiddleware(3600), routes.industriesPerformance)
 app.get("/allStocks", routes.allStocks)
 app.get("/stockData", routes.stockData)
 

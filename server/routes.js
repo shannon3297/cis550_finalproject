@@ -200,11 +200,9 @@ async function articlesBeforeBigMoves(req, res) {
       ORDER BY dailyMoveAbs desc
       LIMIT 5;`,
         function (error, results, fields) {
-            results[0]["content"] = results[0]["content"].substring(0, results[0]["content"].indexOf("\n"))
-            results[1]["content"] = results[1]["content"].substring(0, results[1]["content"].indexOf("\n"))
-            results[2]["content"] = results[2]["content"].substring(0, results[2]["content"].indexOf("\n"))
-            results[3]["content"] = results[3]["content"].substring(0, results[3]["content"].indexOf("\n"))
-            results[4]["content"] = results[4]["content"].substring(0, results[4]["content"].indexOf("\n"))
+            for (var i = 0; i < results.length; i++) {
+                results[i]["content"] = results[i]["content"].substring(0, results[i]["content"].indexOf("\n"))
+            }
 
             if (error) {
                 console.log(error)
@@ -250,7 +248,7 @@ async function stocksBiggestMovers(req, res) {
       SELECT l2.ticker as ticker, l2.date as date, l2.close / l.close as dailyMove
       FROM LabeledTickerTable l JOIN LabeledTickerTable l2 on l.ticker = l2.ticker and l.row_num = (l2.row_num + 1)
       where l2.date = STR_TO_DATE('${date}','%Y-%m-%d')
-      order by dailyMove desc
+      order by abs(1 - dailyMove) desc
       limit 5
     `,
         function (error, results, fields) {
@@ -290,7 +288,7 @@ async function stocksBiggestVolatility(req, res) {
         `SELECT ticker, ROUND((high / low), 2) as intradayMovement
     FROM Stocks
     WHERE date =  STR_TO_DATE('${date}','%Y-%m-%d')  
-    ORDER BY abs(intradayMovement) desc
+    ORDER BY abs(1-intradayMovement) desc
     LIMIT 5
     `,
         function (error, results, fields) {
@@ -428,7 +426,7 @@ async function companiesWithMostPress(req, res) {
                         OR w.content LIKE CONCAT('%', a.company_name, '%')
                     )
         )
-        SELECT temp1.ticker
+        SELECT temp1.ticker, (2 * numBigMentions + 1 * numSmallMentions) as score
             FROM
             (SELECT t.ticker, COUNT(*) as numBigMentions
             FROM TitleMentions t JOIN ContentMentions c ON t.ticker = c.ticker AND t.article_id = c.article_id
@@ -437,7 +435,7 @@ async function companiesWithMostPress(req, res) {
             (SELECT ticker, COUNT(*) as numSmallMentions
             FROM ContentMentions
             GROUP BY ticker) AS temp2
-        ORDER BY (2 * numBigMentions + 1 * numSmallMentions) desc
+        ORDER BY score desc
         LIMIT 10
     `,
         function (error, results, fields) {

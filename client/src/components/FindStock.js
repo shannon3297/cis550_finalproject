@@ -62,6 +62,7 @@ class FindStock extends React.Component {
                     stringDate: item.date.substring(0, 10),
                 })),
                 articles: result[1].results,
+                noArticlesFound: result[1].results.length == 0,
                 searchActive: false,
             })
         })
@@ -136,6 +137,7 @@ class FindStock extends React.Component {
                                         <div class="font-sm line-clamp-4">{article.content}</div>
                                     </a>
                                 ))}
+                                {this.state.noArticlesFound && <div>No articles found!</div>}
                             </div>
                         </div>
                     </div>

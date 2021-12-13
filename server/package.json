@@ -2,9 +2,13 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "flat-cache": "^3.0.4",
+    "memory-cache": "^0.2.0",
     "mysql": "^2.18.1",
     "node-fetch": "^3.0.0",
     "nodemon": "^2.0.12",
+    "redis": "^4.0.1",
+    "sqlite3": "^5.0.2",
     "supertest": "^6.1.6"
   },
   "devDependencies": {
