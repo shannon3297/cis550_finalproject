@@ -200,12 +200,11 @@ async function articlesBeforeBigMoves(req, res) {
       ORDER BY dailyMoveAbs desc
       LIMIT 5;`,
         function (error, results, fields) {
-            results[0]["content"] = results[0]["content"].substring(0,results[0]["content"].indexOf("\n"));
-            results[1]["content"] = results[1]["content"].substring(0,results[1]["content"].indexOf("\n"));
-            results[2]["content"] = results[2]["content"].substring(0,results[2]["content"].indexOf("\n"));
-            results[3]["content"] = results[3]["content"].substring(0,results[3]["content"].indexOf("\n"));
-            results[4]["content"] = results[4]["content"].substring(0,results[4]["content"].indexOf("\n"));
-
+            results[0]["content"] = results[0]["content"].substring(0, results[0]["content"].indexOf("\n"))
+            results[1]["content"] = results[1]["content"].substring(0, results[1]["content"].indexOf("\n"))
+            results[2]["content"] = results[2]["content"].substring(0, results[2]["content"].indexOf("\n"))
+            results[3]["content"] = results[3]["content"].substring(0, results[3]["content"].indexOf("\n"))
+            results[4]["content"] = results[4]["content"].substring(0, results[4]["content"].indexOf("\n"))
 
             if (error) {
                 console.log(error)
@@ -222,25 +221,26 @@ async function articlesBeforeBigMoves(req, res) {
 // ********************************************
 
 /**
- * Returns the top 5 stocks with the highest daily moves on specified date. 
- * 
+ * Returns the top 5 stocks with the highest daily moves on specified date.
+ *
  * Query params
- * date - date to conduct this query to. Make sure this is a valid historical trading day. 
+ * date - date to conduct this query to. Make sure this is a valid historical trading day.
  *      (defaults to 2021-10-29)
- * 
+ *
  * Returns 5 x 3
- * Column name: ticker, date, dailyMove 
- * intradayMovement = stock's close price on date / close price on day before date 
- * 
+ * Column name: ticker, date, dailyMove
+ * intradayMovement = stock's close price on date / close price on day before date
+ *
  * Rows are sorted in descending order of dailyMove
- * 
- * @param {*} req 
- * @param {*} res 
+ *
+ * @param {*} req
+ * @param {*} res
  */
 async function stocksBiggestMovers(req, res) {
-    const date = req.query.date ? req.query.date : "2021-10-29";
+    const date = req.query.date ? req.query.date : "2021-10-29"
 
-    connection.query(`WITH LabeledTickerTable AS (
+    connection.query(
+        `WITH LabeledTickerTable AS (
         SELECT ticker, date, close, row_number() over (partition by ticker ORDER BY date desc) as row_num
         FROM Stocks
         WHERE date <= STR_TO_DATE('${date}','%Y-%m-%d')
@@ -252,23 +252,23 @@ async function stocksBiggestMovers(req, res) {
       where l2.date = STR_TO_DATE('${date}','%Y-%m-%d')
       order by dailyMove desc
       limit 5
-    `, function (error, results, fields) {
+    `,
+        function (error, results, fields) {
             if (error) {
                 console.log(error)
                 res.json({ error: error })
             } else if (results) {
                 res.json({ results: results })
             }
-        });
-
+        }
+    )
 }
 
-
 /**
- * Returns the top 5 stocks with the highest intraday price volatiltiy on a specific date. 
- * Must make sure that the day that is req.query.numdays days before Oct 31 2021 is a valid 
- * trading day, otherwise result will be empty. 
- * 
+ * Returns the top 5 stocks with the highest intraday price volatiltiy on a specific date.
+ * Must make sure that the day that is req.query.numdays days before Oct 31 2021 is a valid
+ * trading day, otherwise result will be empty.
+ *
  * Query params
  * date - date to conduct this query to. Make sure this is a valid historical trading day.
  *      (defaults to 2021-10-29)
@@ -661,6 +661,28 @@ async function industriesPerformance(req, res) {
     )
 }
 
+/**
+ * Returns list of all stocks for the UI
+ *
+ * @param {*} req
+ * @param {*} res
+ */
+async function allStocks(req, res) {
+    connection.query(
+        `SELECT ticker, company_name as name
+        FROM Company
+    `,
+        function (error, results, fields) {
+            if (error) {
+                console.log(error)
+                res.json({ error: error })
+            } else if (results) {
+                res.json({ results: results })
+            }
+        }
+    )
+}
+
 module.exports = {
     stockStats,
     recentArticles,
@@ -673,6 +695,6 @@ module.exports = {
     industriesMostPress,
     industriesToMoveSoon,
     industriesPerformance,
-    // allStocks,
+    allStocks,
     stockData,
 }

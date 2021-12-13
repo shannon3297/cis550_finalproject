@@ -24,7 +24,7 @@ app.get("/industriesMostVolatility", routes.industriesMostVolatility)
 app.get("/industriesMostPress", routes.industriesMostPress)
 app.get("/industriesToMoveSoon", routes.industriesToMoveSoon)
 app.get("/industriesPerformance", routes.industriesPerformance)
-// app.get("/allStocks", routes.allStocks)
+app.get("/allStocks", routes.allStocks)
 app.get("/stockData", routes.stockData)
 
 app.listen(config.server_port, () => {
