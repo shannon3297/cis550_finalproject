@@ -18,6 +18,8 @@ class FindStock extends React.Component {
             activeTicker: "",
             searchMatches: [],
             stockPriceData: [],
+            startDatePicked: new Date("2021-10-06"),
+            endDatePicked: new Date("2021-10-31"),
             articles: [],
             simpleStats: [{ minMove: "loading...", maxMove: "loading...", avgMove: "loading..." }],
             currPrice: "loading...",
@@ -33,6 +35,13 @@ class FindStock extends React.Component {
         return toUnix
     }
 
+    formatMovement(number, fixed = 2, includePlus = true) {
+        if (isNaN(number)) {
+            return number
+        }
+        return (number > 1 && includePlus ? "+" : "") + (number * 100 - 100).toFixed(fixed) + "%"
+    }
+
     getRecentArticles() {
         console.log(this.state.activeTicker)
         let url = SERVER_URL + "/stockStats" + (this.state.activeTicker ? "?ticker=" + this.state.activeTicker : "")
@@ -45,13 +54,14 @@ class FindStock extends React.Component {
             })
     }
 
-    getSimpleStats(date) {
+    getSimpleStats() {
         console.log(this.state.activeTicker)
         let url =
             SERVER_URL +
-            "/stockStats" +
-            (date ? "?startday=" + date : "") +
-            (date ? "&endday=" + date : "") +
+            "/stockStats?startday=" +
+            format(this.state.startDatePicked, "yyyy-MM-dd") +
+            "&enddate=" +
+            format(this.state.endDatePicked, "yyyy-MM-dd") +
             (this.state.activeTicker ? "&ticker=" + this.state.activeTicker : "")
         console.log(url)
         fetch(url)
@@ -77,14 +87,12 @@ class FindStock extends React.Component {
         fetch("https://finnhub.io/api/v1/quote?symbol=" + this.state.activeTicker + "&token=c6r6djiad3i891nj8vfg") // LIVE STOCK PRICE
             .then((res) => res.json())
             .then((result) => {
-                this.state.currPrice = result.c
+                this.setState({ currPrice: result.c })
                 console.log("Got the live price: ", result.c)
             })
     }
 
     componentDidMount() {
-        this.getBigMovers(null)
-
         fetch(SERVER_URL + "/allStocks")
             .then((res) => res.json())
             .then((result) => {
@@ -96,6 +104,8 @@ class FindStock extends React.Component {
             console.log("getting", sp.get("ticker"))
             this.fetchStockData(sp.get("ticker"))
         }
+
+        setInterval(() => this.getCurrPrice(), 5000)
     }
 
     fetchStockData(ticker) {
@@ -105,6 +115,11 @@ class FindStock extends React.Component {
         if (this.inputRef.current) {
             this.inputRef.current.value = ticker
         }
+
+        //this.getCurrPrice()
+
+        this.getBigMovers(null)
+        this.getSimpleStats(this.state.startDatePicked, this.state.endDatePicked)
 
         Promise.all([
             fetch(SERVER_URL + "/stockData?ticker=" + ticker).then((res) => res.json()),
@@ -241,9 +256,9 @@ class FindStock extends React.Component {
                 <div className="bg-white w-full flex-center p-8 paddingBottom p-60">
                     {" "}
                     {/* Section I */}
-                    <div style={sectionHeader}>I. simple start</div>
+                    <div style={sectionHeader}>I. simple stats</div>
                     <div style={subSection} className="text-sm my-4">
-                        To start off, let's keep it simple including just the basics.
+                        Let's see how a stock did over time!
                     </div>
                     <div className="container flex-center">
                         <div className="flex flex-apart text-black">
@@ -255,17 +270,35 @@ class FindStock extends React.Component {
                                     Let's see how the stock did on the chosen date.
                                 </div>
 
+                                <div className="my-2">
+                                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                                        <DesktopDatePicker
+                                            label="Pick a start Date!"
+                                            inputFormat="yyyy-MM-dd"
+                                            minDate={new Date(2020, 10, 1)}
+                                            dateFormat="yyyy-MM-dd"
+                                            maxDate={this.state.endDatePicked}
+                                            value={this.state.startDatePicked}
+                                            onChange={(newValue) => {
+                                                this.setState({ startDatePicked: newValue }, () =>
+                                                    this.getSimpleStats()
+                                                )
+                                            }}
+                                            renderInput={(params) => <TextField {...params} />}
+                                        />
+                                    </LocalizationProvider>
+                                </div>
+
                                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                                     <DesktopDatePicker
-                                        label="Pick a Date!"
+                                        label="Pick an end Date!"
                                         inputFormat="yyyy-MM-dd"
-                                        minDate={new Date(2020, 10, 1)}
+                                        minDate={this.state.startDatePicked}
                                         dateFormat="yyyy-MM-dd"
                                         maxDate={new Date(2021, 10, 31)}
-                                        value={this.state.datePicked}
+                                        value={this.state.endDatePicked}
                                         onChange={(newValue) => {
-                                            this.setState({ datePicked: newValue })
-                                            this.getSimpleStats(format(newValue, "yyyy-MM-dd"))
+                                            this.setState({ endDatePicked: newValue }, () => this.getSimpleStats())
                                         }}
                                         renderInput={(params) => <TextField {...params} />}
                                     />
@@ -273,21 +306,21 @@ class FindStock extends React.Component {
                             </div>
                             <div className="flex flex-row">
                                 <div>
-                                    <div style={columnHeader}>Min Movement</div>
+                                    <div style={columnHeader}>Minimum Daily Move</div>
                                     {this.state.simpleStats.map((v) => {
-                                        return <h6 style={content}>{v.minMove} </h6>
+                                        return <h6 style={content}>{this.formatMovement(v.minMove)} </h6>
                                     })}
                                 </div>
                                 <div>
-                                    <div style={columnHeader}>Max Movement</div>
+                                    <div style={columnHeader}>Maximum Daily Move</div>
                                     {this.state.simpleStats.map((v) => {
-                                        return <h6 style={content}>{v.maxMove} </h6>
+                                        return <h6 style={content}>{this.formatMovement(v.maxMove)} </h6>
                                     })}
                                 </div>
                                 <div>
-                                    <div style={columnHeader}>Avg Movement</div>
+                                    <div style={columnHeader}>Average Daily Move</div>
                                     {this.state.simpleStats.map((v) => {
-                                        return <h6 style={content}>{v.avgMove} </h6>
+                                        return <h6 style={content}>{this.formatMovement(v.avgMove)} </h6>
                                     })}
                                 </div>
                             </div>

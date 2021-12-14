@@ -9,6 +9,7 @@ import { SERVER_URL } from "../config"
 
 class Overview extends React.Component {
     constructor(props) {
+        console.log("server url is ", SERVER_URL)
         super(props)
         this.state = {
             activeTicker: "",
