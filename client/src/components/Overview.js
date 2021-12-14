@@ -5,8 +5,7 @@ import LocalizationProvider from "@mui/lab/LocalizationProvider"
 import DesktopDatePicker from "@mui/lab/DesktopDatePicker"
 import format from "date-fns/format"
 import { Link } from "react-router-dom"
-
-let SERVER_URL = "http://localhost:8080"
+import { SERVER_URL } from "../config"
 
 class Overview extends React.Component {
     constructor(props) {

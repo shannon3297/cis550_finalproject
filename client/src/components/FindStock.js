@@ -6,9 +6,7 @@ import AdapterDateFns from "@mui/lab/AdapterDateFns"
 import LocalizationProvider from "@mui/lab/LocalizationProvider"
 import DesktopDatePicker from "@mui/lab/DesktopDatePicker"
 import format from "date-fns/format"
-
-
-let SERVER_URL = "http://localhost:8080"
+import { SERVER_URL } from "../config"
 
 const colors = ["red", "yellow", "green", "black", "purple"]
 
@@ -21,10 +19,10 @@ class FindStock extends React.Component {
             searchMatches: [],
             stockPriceData: [],
             articles: [],
-            simpleStats: [{minMove: "loading...", maxMove: "loading...", avgMove: "loading..."}],
-            currPrice: 'loading...',
-            recentArticles: [{title: "loading...", date: 'loading...', url: ""}],
-            bigMovers: []
+            simpleStats: [{ minMove: "loading...", maxMove: "loading...", avgMove: "loading..." }],
+            currPrice: "loading...",
+            recentArticles: [{ title: "loading...", date: "loading...", url: "" }],
+            bigMovers: [],
         }
         this.inputRef = React.createRef()
     }
@@ -37,8 +35,7 @@ class FindStock extends React.Component {
 
     getRecentArticles() {
         console.log(this.state.activeTicker)
-        let url = SERVER_URL + "/stockStats" 
-            + (this.state.activeTicker ? "?ticker=" + this.state.activeTicker : "")
+        let url = SERVER_URL + "/stockStats" + (this.state.activeTicker ? "?ticker=" + this.state.activeTicker : "")
         console.log(url)
         fetch(url)
             .then((res) => res.json())
@@ -50,10 +47,12 @@ class FindStock extends React.Component {
 
     getSimpleStats(date) {
         console.log(this.state.activeTicker)
-        let url = SERVER_URL + "/stockStats" 
-            + (date ? "?startday=" + date : "")
-            + (date ? "&endday=" + date : "")
-            + (this.state.activeTicker ? "&ticker=" + this.state.activeTicker : "")
+        let url =
+            SERVER_URL +
+            "/stockStats" +
+            (date ? "?startday=" + date : "") +
+            (date ? "&endday=" + date : "") +
+            (this.state.activeTicker ? "&ticker=" + this.state.activeTicker : "")
         console.log(url)
         fetch(url)
             .then((res) => res.json())
@@ -64,8 +63,7 @@ class FindStock extends React.Component {
     }
 
     getBigMovers(date) {
-        let url = SERVER_URL + "/stockStats" 
-            + (date ? "?date=" + date : "")
+        let url = SERVER_URL + "/stockStats" + (date ? "?date=" + date : "")
         console.log(url)
         fetch(url)
             .then((res) => res.json())
@@ -76,19 +74,15 @@ class FindStock extends React.Component {
     }
 
     getCurrPrice() {
-        fetch('https://finnhub.io/api/v1/quote?symbol=' + this.state.activeTicker + '&token=c6r6djiad3i891nj8vfg') // LIVE STOCK PRICE
+        fetch("https://finnhub.io/api/v1/quote?symbol=" + this.state.activeTicker + "&token=c6r6djiad3i891nj8vfg") // LIVE STOCK PRICE
             .then((res) => res.json())
             .then((result) => {
                 this.state.currPrice = result.c
-                console.log('Got the live price: ', result.c)
+                console.log("Got the live price: ", result.c)
             })
     }
 
-
-    
-
     componentDidMount() {
-
         this.getBigMovers(null)
 
         fetch(SERVER_URL + "/allStocks")
@@ -102,7 +96,6 @@ class FindStock extends React.Component {
             console.log("getting", sp.get("ticker"))
             this.fetchStockData(sp.get("ticker"))
         }
-
     }
 
     fetchStockData(ticker) {
@@ -147,7 +140,6 @@ class FindStock extends React.Component {
     getStockStats = (e) => {}
 
     render() {
-
         const sectionHeader = {
             // paddingTop: '120px',
             fontSize: "40px",
@@ -217,7 +209,7 @@ class FindStock extends React.Component {
                                 </div>
                             )}
                         </div>
-                        <div className="text-white">Live current price: { this.state.currPrice }</div>
+                        <div className="text-white">Live current price: {this.state.currPrice}</div>
 
                         <div className="p-4 flex-center w-full">
                             <div class="h-96 w-full">
@@ -245,7 +237,7 @@ class FindStock extends React.Component {
                         </div>
                     </div>
                 </div>
-                
+
                 <div className="bg-white w-full flex-center p-8 paddingBottom p-60">
                     {" "}
                     {/* Section I */}
@@ -307,8 +299,7 @@ class FindStock extends React.Component {
                     {" "}
                     {/* Section II */}
                     <div style={sectionHeader}>II. recent fame</div>
-                    <div style={subSection} className="text-sm my-4">
-                    </div>
+                    <div style={subSection} className="text-sm my-4"></div>
                     <div className="container flex-center">
                         <div className="flex flex-apart text-black">
                             <div>
@@ -320,11 +311,13 @@ class FindStock extends React.Component {
                                 </div>
                             </div>
                             <div className="flex flex-row">
-                                <div> {/* TODO Add link to redirect externally! */}
+                                <div>
+                                    {" "}
+                                    {/* TODO Add link to redirect externally! */}
                                     <div style={columnHeader}>Title</div>
                                     {this.state.recentArticles.map((v) => {
                                         return <h6 style={content}>{v.title} </h6>
-                                    })} 
+                                    })}
                                 </div>
                                 <div>
                                     <div style={columnHeader}>Date</div>
@@ -351,7 +344,8 @@ class FindStock extends React.Component {
                                     Impact of news on stocks
                                 </div>
                                 <div style={subHeading} className="text-sm my-4">
-                                We rank the average ratios of how the daily price movement of each stock compares to the times it got mentioned in WSJ.
+                                    We rank the average ratios of how the daily price movement of each stock compares to
+                                    the times it got mentioned in WSJ.
                                 </div>
                             </div>
                             <div className="flex flex-row">
@@ -371,8 +365,6 @@ class FindStock extends React.Component {
                         </div>
                     </div>
                 </div>
-
-                
             </>
         )
     }

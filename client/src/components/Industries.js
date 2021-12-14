@@ -6,9 +6,9 @@ import AdapterDateFns from "@mui/lab/AdapterDateFns"
 import LocalizationProvider from "@mui/lab/LocalizationProvider"
 import DesktopDatePicker from "@mui/lab/DesktopDatePicker"
 import format from "date-fns/format"
+import { SERVER_URL } from "../config"
 
 const colors = ["red", "yellow", "green", "black", "white"]
-let SERVER_URL = "http://localhost:8080"
 
 class Industries extends React.Component {
     constructor(props) {
@@ -169,8 +169,6 @@ class Industries extends React.Component {
                                         renderInput={(params) => <TextField {...params} />}
                                     />
                                 </LocalizationProvider>
-
-                                
                             </div>
                             <div className="flex flex-row">
                                 <div>
