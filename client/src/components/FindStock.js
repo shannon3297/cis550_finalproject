@@ -27,6 +27,7 @@ class FindStock extends React.Component {
             bigMovers: [],
         }
         this.inputRef = React.createRef()
+        console.log("hello hi")
     }
 
     dateToUnix = (dateString) => {
@@ -44,7 +45,7 @@ class FindStock extends React.Component {
 
     getRecentArticles() {
         console.log(this.state.activeTicker)
-        let url = SERVER_URL + "/stockStats" + (this.state.activeTicker ? "?ticker=" + this.state.activeTicker : "")
+        let url = SERVER_URL + "/recentArticles" + (this.state.activeTicker ? "?ticker=" + this.state.activeTicker : "")
         console.log(url)
         fetch(url)
             .then((res) => res.json())
@@ -73,7 +74,7 @@ class FindStock extends React.Component {
     }
 
     getBigMovers(date) {
-        let url = SERVER_URL + "/stockStats" + (date ? "?date=" + date : "")
+        let url = SERVER_URL + "/stocksBiggestMovers" + (date ? "?date=" + date : "")
         console.log(url)
         fetch(url)
             .then((res) => res.json())
@@ -99,6 +100,8 @@ class FindStock extends React.Component {
                 this.setState({ allTickers: result.results, searchMatches: result.results })
             })
 
+        //this.getBigMovers()
+
         const sp = new URLSearchParams(window.location.search)
         if (sp.has("ticker")) {
             console.log("getting", sp.get("ticker"))
@@ -118,7 +121,8 @@ class FindStock extends React.Component {
 
         //this.getCurrPrice()
 
-        this.getBigMovers(null)
+        //this.getBigMovers(null)
+        this.getRecentArticles()
         this.getSimpleStats(this.state.startDatePicked, this.state.endDatePicked)
 
         Promise.all([
@@ -349,49 +353,17 @@ class FindStock extends React.Component {
                                     {/* TODO Add link to redirect externally! */}
                                     <div style={columnHeader}>Title</div>
                                     {this.state.recentArticles.map((v) => {
-                                        return <h6 style={content}>{v.title} </h6>
+                                        return (
+                                            <a href={v.url} target="_blank" className="hover:underline">
+                                                <h6 style={content}>{v.title} </h6>
+                                            </a>
+                                        )
                                     })}
                                 </div>
                                 <div>
                                     <div style={columnHeader}>Date</div>
                                     {this.state.recentArticles.map((v) => {
                                         return <h6 style={content}>{v.date} </h6>
-                                    })}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white w-full flex-center p-8 paddingBottom p-60">
-                    {" "}
-                    {/* Section III */}
-                    <div style={sectionHeader}>III. @mention and jump</div>
-                    <div style={subSection} className="text-sm my-4">
-                        The whole world knows about it, once it's in the news.
-                    </div>
-                    <div className="container flex-center">
-                        <div className="flex flex-apart text-black">
-                            <div>
-                                <div style={Heading} className="text-lg my-4">
-                                    Impact of news on stocks
-                                </div>
-                                <div style={subHeading} className="text-sm my-4">
-                                    We rank the average ratios of how the daily price movement of each stock compares to
-                                    the times it got mentioned in WSJ.
-                                </div>
-                            </div>
-                            <div className="flex flex-row">
-                                <div>
-                                    <div style={columnHeader}>Stock</div>
-                                    {this.state.bigMovers.map((v) => {
-                                        return <h6 style={content}>{v.ticker} </h6>
-                                    })}
-                                </div>
-                                <div>
-                                    <div style={columnHeader}>Ratio</div>
-                                    {this.state.bigMovers.map((v) => {
-                                        return <h6 style={content}>{v.dailyMove} </h6>
                                     })}
                                 </div>
                             </div>
