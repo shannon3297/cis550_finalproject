@@ -13,7 +13,7 @@ class Overview extends React.Component {
         super(props)
         this.state = {
             activeTicker: "",
-            datePicked: "2021-2-20",
+            datePicked: "2021-9-20",
             section3Date: "2021-10-14",
             stocksI: [{ ticker: "loading...", intradayMovement: "loading..." }],
             stocksII: [{ ticker: "loading...", score: "loading..." }],
@@ -114,6 +114,16 @@ class Overview extends React.Component {
         }
         return (
             <>
+                <div className="bg-blue text-white w-full flex-center p-8 paddingBottom p-60">
+                    {" "}
+                    {/* Section II */}
+                    <div style={sectionHeader} className="text-lg my-4">
+                        Welcome to stock'n!
+                    </div>
+                    <div style={subSection} className="text-sm my-4 text-center">
+                    We hope this helps you learn more about the stock market and make more informed investing decisions.
+                    </div>
+                </div>
                 <div className="bg-white w-full flex-center p-8 paddingBottom p-60">
                     {" "}
                     {/* Section I */}
@@ -136,9 +146,9 @@ class Overview extends React.Component {
                                     <DesktopDatePicker
                                         label="Pick a Date!"
                                         inputFormat="yyyy-MM-dd"
-                                        minDate={new Date(2020, 11, 1)}
+                                        minDate={new Date(2020, 9, 1)}
+                                        maxDate={new Date(2021, 9, 1)}
                                         dateFormat="yyyy-MM-dd"
-                                        maxDate={new Date(2021, 11, 1)}
                                         value={this.state.datePicked}
                                         onChange={(newValue) => {
                                             this.setState({ datePicked: newValue })
@@ -186,7 +196,7 @@ class Overview extends React.Component {
                         <div className="flex flex-apart text-white">
                             <div>
                                 <div style={Heading} className="text-lg my-4">
-                                    Industries in the news
+                                    Stocks in the news
                                 </div>
                                 <div style={subHeading} className="text-sm my-4">
                                     Here are the companies that received the most press on Wall Street Journal.
@@ -241,9 +251,9 @@ class Overview extends React.Component {
                                     <DesktopDatePicker
                                         label="Pick a Date!"
                                         inputFormat="yyyy-MM-dd"
-                                        minDate={new Date(2020, 11, 1)}
+                                        minDate={new Date(2020, 9, 1)}
                                         dateFormat="yyyy-MM-dd"
-                                        maxDate={new Date(2021, 11, 1)}
+                                        maxDate={new Date(2021, 9, 1)}
                                         value={this.state.section3Date}
                                         onChange={(newValue) => {
                                             this.setState({ section3Date: newValue })

@@ -18,8 +18,8 @@ class FindStock extends React.Component {
             activeTicker: "",
             searchMatches: [],
             stockPriceData: [],
-            startDatePicked: new Date("2021-10-06"),
-            endDatePicked: new Date("2021-10-31"),
+            startDatePicked: new Date("2021-8-06"),
+            endDatePicked: new Date("2021-9-1"),
             articles: [],
             simpleStats: [{ minMove: "loading...", maxMove: "loading...", avgMove: "loading..." }],
             currPrice: "loading...",
@@ -279,7 +279,7 @@ class FindStock extends React.Component {
                                         <DesktopDatePicker
                                             label="Pick a start Date!"
                                             inputFormat="yyyy-MM-dd"
-                                            minDate={new Date(2020, 10, 1)}
+                                            minDate={new Date(2020, 9, 1)}
                                             dateFormat="yyyy-MM-dd"
                                             maxDate={this.state.endDatePicked}
                                             value={this.state.startDatePicked}
@@ -299,7 +299,7 @@ class FindStock extends React.Component {
                                         inputFormat="yyyy-MM-dd"
                                         minDate={this.state.startDatePicked}
                                         dateFormat="yyyy-MM-dd"
-                                        maxDate={new Date(2021, 10, 31)}
+                                        maxDate={new Date(2021, 9, 1)}
                                         value={this.state.endDatePicked}
                                         onChange={(newValue) => {
                                             this.setState({ endDatePicked: newValue }, () => this.getSimpleStats())

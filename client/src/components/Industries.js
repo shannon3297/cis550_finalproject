@@ -20,7 +20,7 @@ class Industries extends React.Component {
             searchMatches: [],
             stockPriceData: [],
             articles: [],
-            datePicked: "2021-2-20",
+            datePicked: "2021-9-20",
             industriesI: [{ industry: "loading...", intradayMovement: "loading..." }],
             industriesII: [{ industry: "loading...", numMentions: "loading..." }],
             industriesIII: [{ industry: "loading...", mentionIncrease: "loading...", avgRange: "loading..." }],
@@ -40,7 +40,7 @@ class Industries extends React.Component {
     }
 
     formatMovement(number, fixed = 0) {
-        return (number > 0 ? "+" : "") + (number * 100 - 100).toFixed(fixed) + "%"
+        return (number > 1 ? "+" : "") + (number * 100 - 100).toFixed(fixed) + "%"
     }
 
     // dateToUnix = (dateString) => {
@@ -158,9 +158,9 @@ class Industries extends React.Component {
                                     <DesktopDatePicker
                                         label="Pick a Date!"
                                         inputFormat="yyyy-MM-dd"
-                                        minDate={new Date(2020, 10, 1)}
+                                        minDate={new Date(2020, 9, 1)}
                                         dateFormat="yyyy-MM-dd"
-                                        maxDate={new Date(2021, 10, 31)}
+                                        maxDate={new Date(2021, 9, 1)}
                                         value={this.state.datePicked}
                                         onChange={(newValue) => {
                                             this.setState({ datePicked: newValue })
@@ -293,7 +293,7 @@ class Industries extends React.Component {
                                 <div>
                                     <div style={columnHeader}>Performance</div>
                                     {this.state.industriesIV.map((v) => {
-                                        return <h6 style={content}>{this.formatMovement(v.performance)} </h6>
+                                        return <h6 style={content}>{this.formatMovement(v.performance, 2)} </h6>
                                     })}
                                 </div>
                             </div>
