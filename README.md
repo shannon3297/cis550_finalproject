@@ -35,3 +35,5 @@ npm install memory-cache
 npm install @tailwindcss/line-clamp
 
 Then startup server and client in 2 separate terminals per usual: npm run start
+
+**Or see fully deployed application here: http://18.206.205.237/**
