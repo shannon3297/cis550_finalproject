@@ -27,6 +27,11 @@ client/ contains all client-side code
 server/ contains all server-side code
 
 **How to startup application**
+
+Run the following terminal line commands:
+
 npm install memory-cache
+
 npm install @tailwindcss/line-clamp
+
 Then startup server and client in 2 separate terminals per usual: npm run start
