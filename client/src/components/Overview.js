@@ -128,7 +128,8 @@ class Overview extends React.Component {
                                     Top @ [Enter Date]
                                 </div>
                                 <div style={subHeading} className="text-sm my-4">
-                                    Identify industries that saw the most intraday volatility on a given date.
+                                    Enter a date below to see the stocks that had the highest intraday volatility on a
+                                    given day.
                                 </div>
 
                                 <LocalizationProvider dateAdapter={AdapterDateFns}>
